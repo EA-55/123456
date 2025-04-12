@@ -1,122 +1,88 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { ChevronUp, ChevronDown } from "lucide-react"
+import { ChevronDown, ChevronUp, CheckCircle, XCircle } from "lucide-react"
 
 export function LocalStorageTest() {
-  const [status, setStatus] = useState<string>("Prüfe localStorage...")
   const [isSupported, setIsSupported] = useState<boolean | null>(null)
-  const [testValue, setTestValue] = useState<string>("")
-  const [isExpanded, setIsExpanded] = useState<boolean>(false)
+  const [testValue, setTestValue] = useState<string | null>(null)
+  const [allItems, setAllItems] = useState<Record<string, string>>({})
+  const [isExpanded, setIsExpanded] = useState(false)
 
   useEffect(() => {
-    // Prüfen, ob localStorage unterstützt wird
     try {
-      localStorage.setItem("test", "test")
-      const test = localStorage.getItem("test")
-      if (test === "test") {
-        setIsSupported(true)
-        setStatus("localStorage wird unterstützt")
-      } else {
-        setIsSupported(false)
-        setStatus("localStorage wird nicht korrekt unterstützt")
-      }
-      localStorage.removeItem("test")
-    } catch (e) {
-      setIsSupported(false)
-      setStatus(`localStorage wird nicht unterstützt: ${e.message}`)
-    }
+      // Test if localStorage is supported
+      localStorage.setItem("test", "test value")
+      const retrieved = localStorage.getItem("test")
+      setIsSupported(retrieved === "test value")
+      setTestValue(retrieved)
 
-    // Vorhandene Popup-Konfiguration prüfen
-    try {
-      const popupConfig = localStorage.getItem("popupConfig")
-      if (popupConfig) {
-        setTestValue(popupConfig)
-        setStatus((prev) => `${prev}\nPopup-Konfiguration gefunden`)
-      } else {
-        setStatus((prev) => `${prev}\nKeine Popup-Konfiguration gefunden`)
+      // Get all localStorage items
+      const items: Record<string, string> = {}
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key) {
+          items[key] = localStorage.getItem(key) || ""
+        }
       }
-    } catch (e) {
-      setStatus((prev) => `${prev}\nFehler beim Lesen der Popup-Konfiguration: ${e.message}`)
+      setAllItems(items)
+    } catch (error) {
+      setIsSupported(false)
+      console.error("localStorage is not supported:", error)
     }
   }, [])
 
-  const handleTestWrite = () => {
-    try {
-      const testData = {
-        test: "Testdaten",
-        timestamp: new Date().toISOString(),
-      }
-      localStorage.setItem("testData", JSON.stringify(testData))
-      setStatus((prev) => `${prev}\nTestdaten erfolgreich geschrieben`)
-    } catch (e) {
-      setStatus((prev) => `${prev}\nFehler beim Schreiben von Testdaten: ${e.message}`)
-    }
-  }
-
-  const handleTestRead = () => {
-    try {
-      const testData = localStorage.getItem("testData")
-      if (testData) {
-        setStatus((prev) => `${prev}\nTestdaten gelesen: ${testData}`)
-      } else {
-        setStatus((prev) => `${prev}\nKeine Testdaten gefunden`)
-      }
-    } catch (e) {
-      setStatus((prev) => `${prev}\nFehler beim Lesen von Testdaten: ${e.message}`)
-    }
-  }
-
-  const handleResetPopupHistory = () => {
-    try {
-      localStorage.removeItem("popupHistory")
-      localStorage.removeItem("popupCreated")
-      setStatus((prev) => `${prev}\nPopup-History zurückgesetzt`)
-    } catch (e) {
-      setStatus((prev) => `${prev}\nFehler beim Zurücksetzen der Popup-History: ${e.message}`)
-    }
-  }
-
-  const toggleExpanded = () => {
+  const toggleExpand = () => {
     setIsExpanded(!isExpanded)
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t shadow-lg">
-      <div
-        className="flex items-center justify-between p-2 cursor-pointer bg-gray-100 hover:bg-gray-200"
-        onClick={toggleExpanded}
-      >
-        <h3 className="font-bold">localStorage Test</h3>
+    <div className="fixed bottom-0 right-0 w-full md:w-96 bg-white border border-gray-300 shadow-lg rounded-t-lg overflow-hidden z-50">
+      <div className="flex items-center justify-between p-3 bg-gray-100 cursor-pointer" onClick={toggleExpand}>
         <div className="flex items-center">
-          {isSupported === true && <span className="mr-2 text-green-500 text-sm">✓ Unterstützt</span>}
-          {isSupported === false && <span className="mr-2 text-red-500 text-sm">✗ Nicht unterstützt</span>}
-          {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
+          <h3 className="font-medium mr-2">localStorage Test</h3>
+          {isSupported !== null &&
+            (isSupported ? (
+              <CheckCircle className="h-5 w-5 text-green-500" />
+            ) : (
+              <XCircle className="h-5 w-5 text-red-500" />
+            ))}
         </div>
+        {isExpanded ? (
+          <ChevronDown className="h-5 w-5 text-gray-500" />
+        ) : (
+          <ChevronUp className="h-5 w-5 text-gray-500" />
+        )}
       </div>
 
       {isExpanded && (
-        <div className="p-4 max-h-60 overflow-auto">
-          <pre className="text-xs mb-2 whitespace-pre-wrap bg-gray-50 p-2 rounded">{status}</pre>
-
-          {testValue && (
-            <div className="mb-2">
-              <h4 className="font-semibold text-sm">Popup-Konfiguration:</h4>
-              <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto max-h-20">{testValue}</pre>
+        <div className="p-4 max-h-96 overflow-y-auto">
+          <div className="mb-4">
+            <h4 className="font-medium mb-2">Status:</h4>
+            <div className={`p-2 rounded ${isSupported ? "bg-green-100" : "bg-red-100"}`}>
+              {isSupported ? "localStorage wird unterstützt" : "localStorage wird NICHT unterstützt"}
             </div>
-          )}
+          </div>
 
-          <div className="flex flex-wrap gap-2 mt-3">
-            <Button size="sm" onClick={handleTestWrite}>
-              Test schreiben
-            </Button>
-            <Button size="sm" onClick={handleTestRead}>
-              Test lesen
-            </Button>
-            <Button size="sm" variant="destructive" onClick={handleResetPopupHistory}>
-              Popup-History zurücksetzen
-            </Button>
+          <div className="mb-4">
+            <h4 className="font-medium mb-2">Test Wert:</h4>
+            <div className="p-2 bg-gray-100 rounded">{testValue || "Kein Wert gefunden"}</div>
+          </div>
+
+          <div>
+            <h4 className="font-medium mb-2">Alle localStorage Einträge:</h4>
+            {Object.keys(allItems).length > 0 ? (
+              <div className="space-y-2">
+                {Object.entries(allItems).map(([key, value]) => (
+                  <div key={key} className="p-2 bg-gray-100 rounded">
+                    <div className="font-medium">{key}:</div>
+                    <div className="text-sm break-all">{value}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-2 bg-gray-100 rounded">Keine Einträge gefunden</div>
+            )}
           </div>
         </div>
       )}
