@@ -1,347 +1,268 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase"
-import { v4 as uuidv4 } from "uuid"
-
-// Hilfsfunktion zum Generieren eines zufälligen Elements aus einem Array
-function getRandomElement<T>(array: T[]): T {
-  return array[Math.floor(Math.random() * array.length)]
-}
-
-// Hilfsfunktion zum Generieren eines zufälligen Datums innerhalb der letzten 90 Tage
-function getRandomDate(daysBack = 90): Date {
-  const date = new Date()
-  date.setDate(date.getDate() - Math.floor(Math.random() * daysBack))
-  return date
-}
-
-// Hilfsfunktion zum Formatieren eines Datums als ISO-String ohne Zeitzone
-function formatDate(date: Date): string {
-  return date.toISOString().split("T")[0]
-}
 
 export async function POST() {
   try {
     const supabase = createClient()
 
-    // Löschen aller vorhandenen Testdaten
+    // Lösche vorhandene Testdaten
     await supabase.from("complaint_attachments").delete().neq("id", "00000000-0000-0000-0000-000000000000")
     await supabase.from("complaint_vehicle_data").delete().neq("id", "00000000-0000-0000-0000-000000000000")
     await supabase.from("complaint_items").delete().neq("id", "00000000-0000-0000-0000-000000000000")
     await supabase.from("complaints").delete().neq("id", "00000000-0000-0000-0000-000000000000")
 
-    // Beispieldaten für Reklamationen
-    const customerData = [
-      {
-        customer_number: "KD-10001",
-        customer_name: "Max Mustermann",
-        email: "max.mustermann@example.com",
-        phone: "+49 123 4567890",
-      },
-      {
-        customer_number: "KD-10002",
-        customer_name: "Anna Schmidt",
-        email: "anna.schmidt@example.com",
-        phone: "+49 987 6543210",
-      },
-      {
-        customer_number: "KD-10003",
-        customer_name: "Thomas Müller",
-        email: "thomas.mueller@example.com",
-        phone: "+49 555 1234567",
-      },
-      {
-        customer_number: "KD-10004",
-        customer_name: "Laura Weber",
-        email: "laura.weber@example.com",
-        phone: "+49 333 7654321",
-      },
-      {
-        customer_number: "KD-10005",
-        customer_name: "Michael Wagner",
-        email: "michael.wagner@example.com",
-        phone: "+49 444 9876543",
-      },
-    ]
-
-    const receiptNumbers = [
-      "RE-2023-001234",
-      "RE-2023-005678",
-      "RE-2023-009012",
-      "RE-2023-003456",
-      "RE-2023-007890",
-      "RE-2023-002345",
-      "RE-2023-006789",
-      "RE-2023-000123",
-      "RE-2023-004567",
-      "RE-2023-008901",
-    ]
-
-    const descriptions = [
-      "Der Motor startet nicht mehr, nachdem ich das Teil eingebaut habe. Es gibt ein klickendes Geräusch, aber der Motor springt nicht an.",
-      "Das Ersatzteil passt nicht wie beschrieben. Die Bohrlöcher stimmen nicht mit meinem Fahrzeugmodell überein.",
-      "Nach dem Einbau der neuen Bremsen quietschen diese sehr laut bei jeder Bremsung. Das war bei den alten Bremsen nicht der Fall.",
-      "Die gelieferte Stoßstange hat eine andere Farbe als in der Beschreibung angegeben. Ich habe Schwarz bestellt, aber Dunkelgrau erhalten.",
-      "Der Turbolader hat nach nur 500 km den Geist aufgegeben. Es sollte laut Beschreibung mindestens 100.000 km halten.",
-      "Die Dichtung ist bereits beim ersten Einbauversuch gerissen. Das Material scheint minderwertig zu sein.",
-      "Nach dem Einbau des Steuergeräts zeigt das Fahrzeug mehrere Fehlercodes an, die vorher nicht da waren. Das Auto läuft sehr unrund.",
-      "Die Motorhaube schließt nicht richtig, obwohl laut Beschreibung eine 100%ige Passgenauigkeit garantiert wurde.",
-      "Der Katalysator verursacht ein lautes Rasseln bei höheren Geschwindigkeiten. Das sollte nicht normal sein für ein neues Teil.",
-      "Die Scheinwerfer haben nach nur zwei Wochen Nutzung Wasser im Inneren. Sie sollten wasserdicht sein.",
-    ]
-
+    // Erstelle 10 Testreklamationen
+    const complaints = []
     const statuses = ["pending", "in-progress", "completed", "rejected"]
-
-    const deliveryForms = ["Abholung", "Rücksendung", "Vor-Ort-Reparatur"]
-
-    const preferredProcessing = ["Reparatur", "Austausch", "Rückerstattung", "Gutschrift", "Teilweise Rückerstattung"]
-
-    const processorNames = ["Max Müller", "Sarah Schmidt", "Thomas Weber", null, null]
+    const customerNames = [
+      "Max Mustermann",
+      "Anna Schmidt",
+      "Thomas Müller",
+      "Lisa Weber",
+      "Michael Schneider",
+      "Julia Fischer",
+      "Markus Wagner",
+      "Sarah Becker",
+      "Daniel Hoffmann",
+      "Laura Meyer",
+    ]
+    const customerEmails = [
+      "max.mustermann@example.com",
+      "anna.schmidt@example.com",
+      "thomas.mueller@example.com",
+      "lisa.weber@example.com",
+      "michael.schneider@example.com",
+      "julia.fischer@example.com",
+      "markus.wagner@example.com",
+      "sarah.becker@example.com",
+      "daniel.hoffmann@example.com",
+      "laura.meyer@example.com",
+    ]
+    const phoneNumbers = [
+      "+49 123 456789",
+      "+49 234 567890",
+      "+49 345 678901",
+      "+49 456 789012",
+      "+49 567 890123",
+      "+49 678 901234",
+      "+49 789 012345",
+      "+49 890 123456",
+      "+49 901 234567",
+      "+49 012 345678",
+    ]
+    const receiptNumbers = [
+      "R-2023-1234",
+      "R-2023-2345",
+      "R-2023-3456",
+      "R-2023-4567",
+      "R-2023-5678",
+      "R-2023-6789",
+      "R-2023-7890",
+      "R-2023-8901",
+      "R-2023-9012",
+      "R-2023-0123",
+    ]
+    const descriptions = [
+      "Der Motor springt nicht an und macht seltsame Geräusche. Ich habe bereits versucht, die Batterie zu überprüfen, aber das Problem besteht weiterhin.",
+      "Die Bremsen quietschen sehr laut und die Bremsleistung hat nachgelassen. Dies tritt besonders bei Nässe auf.",
+      "Das Getriebe schaltet nicht mehr richtig und es gibt Probleme beim Wechsel zwischen den Gängen.",
+      "Die Kupplung rutscht durch und das Fahrzeug beschleunigt nicht mehr richtig.",
+      "Die Lichtmaschine lädt die Batterie nicht mehr auf, die Warnleuchte im Armaturenbrett leuchtet ständig.",
+      "Der Turbolader macht pfeifende Geräusche und das Fahrzeug verliert an Leistung.",
+      "Die Einspritzpumpe funktioniert nicht mehr richtig, der Motor läuft unrund und verbraucht mehr Kraftstoff.",
+      "Der Anlasser dreht nicht mehr durch, es ist nur ein Klicken zu hören.",
+      "Die Wasserpumpe ist undicht und es tritt Kühlflüssigkeit aus.",
+      "Die Zylinderkopfdichtung ist defekt, es kommt Öl ins Kühlwasser und der Motor überhitzt.",
+    ]
+    const deliveryForms = ["personal", "shipping", "pickup"]
+    const processingTypes = ["return", "exchange", "repair"]
+    const vehicleTypes = ["car", "truck", "motorcycle", "ship", "train"]
+    const manufacturers = [
+      "BMW",
+      "Mercedes-Benz",
+      "Audi",
+      "Volkswagen",
+      "Ford",
+      "Opel",
+      "Toyota",
+      "Renault",
+      "Fiat",
+      "Peugeot",
+    ]
+    const models = ["3er", "C-Klasse", "A4", "Golf", "Focus", "Astra", "Corolla", "Clio", "500", "308"]
+    const years = ["2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023"]
+    const installers = ["user", "workshop", "dealer"]
 
     // Artikel-Daten
-    const articleData = [
-      {
-        manufacturer: "Bosch",
-        article_index: "0986452044",
-        article_name: "Ölfilter für VW, Audi, Skoda",
-        purchase_date: formatDate(getRandomDate(60)),
-        quantity: 1,
-      },
-      {
-        manufacturer: "Febi Bilstein",
-        article_index: "26921",
-        article_name: "Querlenker vorne links",
-        purchase_date: formatDate(getRandomDate(45)),
-        quantity: 1,
-      },
-      {
-        manufacturer: "Sachs",
-        article_index: "3000951097",
-        article_name: "Kupplungssatz komplett",
-        purchase_date: formatDate(getRandomDate(30)),
-        quantity: 1,
-      },
-      {
-        manufacturer: "Valeo",
-        article_index: "811307",
-        article_name: "Klimakompressor",
-        purchase_date: formatDate(getRandomDate(90)),
-        quantity: 1,
-      },
-      {
-        manufacturer: "Brembo",
-        article_index: "09.9772.11",
-        article_name: "Bremsscheiben Set vorne",
-        purchase_date: formatDate(getRandomDate(20)),
-        quantity: 2,
-      },
-      {
-        manufacturer: "NGK",
-        article_index: "LZKAR6-11",
-        article_name: "Zündkerzen Set",
-        purchase_date: formatDate(getRandomDate(15)),
-        quantity: 4,
-      },
-      {
-        manufacturer: "Mann-Filter",
-        article_index: "C 2433/2",
-        article_name: "Luftfilter",
-        purchase_date: formatDate(getRandomDate(40)),
-        quantity: 1,
-      },
-      {
-        manufacturer: "Continental",
-        article_index: "CT1168",
-        article_name: "Zahnriemen",
-        purchase_date: formatDate(getRandomDate(75)),
-        quantity: 1,
-      },
-      {
-        manufacturer: "Pierburg",
-        article_index: "7.00373.10.0",
-        article_name: "AGR-Ventil",
-        purchase_date: formatDate(getRandomDate(50)),
-        quantity: 1,
-      },
-      {
-        manufacturer: "Hella",
-        article_index: "8MK376762-261",
-        article_name: "Kühler, Motorkühlung",
-        purchase_date: formatDate(getRandomDate(65)),
-        quantity: 1,
-      },
+    const articleManufacturers = [
+      "Bosch",
+      "Continental",
+      "Brembo",
+      "Valeo",
+      "Hella",
+      "Mahle",
+      "ZF",
+      "Schaeffler",
+      "Denso",
+      "NGK",
+    ]
+    const articleNames = [
+      "Bremssattel vorne links",
+      "Lichtmaschine 120A",
+      "Ölfilter",
+      "Luftfilter",
+      "Zündkerzen Set",
+      "Wasserpumpe",
+      "Kupplung komplett",
+      "Stoßdämpfer hinten",
+      "Lambdasonde",
+      "Anlasser",
+      "Turbolader",
+      "Einspritzpumpe",
+      "Zylinderkopfdichtung",
+      "Kurbelwellensensor",
+      "Nockenwellensensor",
     ]
 
-    // Fahrzeugdaten
-    const vehicleData = [
-      {
-        vehicle_type: "PKW",
-        manufacturer: "Volkswagen",
-        model: "Golf VII",
-        vehicle_type_detail: "Limousine",
-        year: "2018",
-        vin: "WVWZZZ1KZAM654321",
-        installation_date: formatDate(getRandomDate(30)),
-        removal_date: formatDate(getRandomDate(10)),
-        mileage_installation: 65000,
-        mileage_removal: 67500,
-        installer: "Selbsteinbau",
-      },
-      {
-        vehicle_type: "PKW",
-        manufacturer: "BMW",
-        model: "3er E90",
-        vehicle_type_detail: "Limousine",
-        year: "2010",
-        vin: "WBAPK73579E123456",
-        installation_date: formatDate(getRandomDate(45)),
-        removal_date: formatDate(getRandomDate(15)),
-        mileage_installation: 120000,
-        mileage_removal: 122000,
-        installer: "Fachwerkstatt",
-      },
-      {
-        vehicle_type: "PKW",
-        manufacturer: "Mercedes-Benz",
-        model: "C-Klasse W204",
-        vehicle_type_detail: "Kombi",
-        year: "2012",
-        vin: "WDD2040071A987654",
-        installation_date: formatDate(getRandomDate(60)),
-        removal_date: formatDate(getRandomDate(20)),
-        mileage_installation: 95000,
-        mileage_removal: 97000,
-        installer: "Vertragswerkstatt",
-      },
-      {
-        vehicle_type: "LKW",
-        manufacturer: "MAN",
-        model: "TGX",
-        vehicle_type_detail: "Sattelzugmaschine",
-        year: "2015",
-        vin: "WMAH06ZZ7FM456789",
-        installation_date: formatDate(getRandomDate(90)),
-        removal_date: formatDate(getRandomDate(30)),
-        mileage_installation: 350000,
-        mileage_removal: 375000,
-        installer: "Werkstatt",
-      },
-      {
-        vehicle_type: "Motorrad",
-        manufacturer: "Honda",
-        model: "CBR 1000 RR",
-        vehicle_type_detail: "Supersport",
-        year: "2019",
-        vin: "JH2SC5934KM123456",
-        installation_date: formatDate(getRandomDate(20)),
-        removal_date: formatDate(getRandomDate(5)),
-        mileage_installation: 15000,
-        mileage_removal: 16000,
-        installer: "Fachwerkstatt",
-      },
-    ]
-
-    // Erstellen von 10 Reklamationen mit zufälligen Daten
-    const complaintIds = []
     for (let i = 0; i < 10; i++) {
-      const customer = getRandomElement(customerData)
-      const complaintId = uuidv4()
-      complaintIds.push(complaintId)
+      const complaintId = crypto.randomUUID()
+      const status = statuses[Math.floor(Math.random() * statuses.length)]
+      const hasAttachments = Math.random() > 0.5
+      const hasDiagnosticOutput = Math.random() > 0.7
 
-      const createdAt = getRandomDate(90)
-      const updatedAt = new Date(createdAt)
-      updatedAt.setDate(createdAt.getDate() + Math.floor(Math.random() * 5))
-
-      // Reklamation erstellen
-      await supabase.from("complaints").insert({
+      // Erstelle Reklamation
+      const complaint = {
         id: complaintId,
-        customer_number: customer.customer_number,
-        customer_name: customer.customer_name,
-        email: customer.email,
-        phone: customer.phone,
-        receipt_number: getRandomElement(receiptNumbers),
-        description: getRandomElement(descriptions),
-        error_date: formatDate(getRandomDate(60)),
-        delivery_form: getRandomElement(deliveryForms),
-        preferred_processing: getRandomElement(preferredProcessing),
-        additional_info:
-          Math.random() > 0.5 ? "Bitte schnellstmöglich bearbeiten, da Fahrzeug nicht fahrbereit ist." : null,
+        customer_number: `KD-${100000 + i}`,
+        customer_name: customerNames[i],
+        email: customerEmails[i],
+        phone: Math.random() > 0.3 ? phoneNumbers[i] : null,
+        receipt_number: receiptNumbers[i],
+        description: descriptions[i],
+        error_date: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000).toISOString(),
+        delivery_form: deliveryForms[Math.floor(Math.random() * deliveryForms.length)],
+        preferred_processing: processingTypes[Math.floor(Math.random() * processingTypes.length)],
+        additional_info: Math.random() > 0.5 ? "Zusätzliche Informationen zur Reklamation." : null,
         additional_costs: Math.random() > 0.7,
-        has_attachments: Math.random() > 0.5,
-        has_diagnostic_output: Math.random() > 0.7,
-        status: getRandomElement(statuses),
-        processor_name: getRandomElement(processorNames),
-        created_at: createdAt.toISOString(),
-        updated_at: updatedAt.toISOString(),
-      })
-
-      // 1-3 Artikel pro Reklamation hinzufügen
-      const numItems = Math.floor(Math.random() * 3) + 1
-      const usedArticleIndices = new Set()
-
-      for (let j = 0; j < numItems; j++) {
-        let articleIndex
-        do {
-          articleIndex = Math.floor(Math.random() * articleData.length)
-        } while (usedArticleIndices.has(articleIndex))
-
-        usedArticleIndices.add(articleIndex)
-        const article = articleData[articleIndex]
-
-        await supabase.from("complaint_items").insert({
-          id: uuidv4(),
-          complaint_id: complaintId,
-          manufacturer: article.manufacturer,
-          article_index: article.article_index,
-          article_name: article.article_name,
-          purchase_date: article.purchase_date,
-          quantity: article.quantity,
-        })
+        has_attachments: hasAttachments,
+        has_diagnostic_output: hasDiagnosticOutput,
+        status,
+        processor_name: status !== "pending" ? "Admin" : null,
+        created_at: new Date(Date.now() - Math.floor(Math.random() * 60) * 24 * 60 * 60 * 1000).toISOString(),
+        updated_at: new Date().toISOString(),
       }
 
-      // Fahrzeugdaten hinzufügen
-      const vehicle = getRandomElement(vehicleData)
-      await supabase.from("complaint_vehicle_data").insert({
-        id: uuidv4(),
-        complaint_id: complaintId,
-        vehicle_type: vehicle.vehicle_type,
-        manufacturer: vehicle.manufacturer,
-        model: vehicle.model,
-        vehicle_type_detail: vehicle.vehicle_type_detail,
-        year: vehicle.year,
-        vin: vehicle.vin,
-        installation_date: vehicle.installation_date,
-        removal_date: vehicle.removal_date,
-        mileage_installation: vehicle.mileage_installation,
-        mileage_removal: vehicle.mileage_removal,
-        installer: vehicle.installer,
-      })
+      const { error: complaintError } = await supabase.from("complaints").insert(complaint)
 
-      // Anhänge hinzufügen (wenn has_attachments true ist)
-      if (Math.random() > 0.5) {
-        const numAttachments = Math.floor(Math.random() * 3) + 1
+      if (complaintError) {
+        throw new Error(`Fehler beim Erstellen der Reklamation: ${complaintError.message}`)
+      }
 
-        for (let k = 0; k < numAttachments; k++) {
-          const isDiagnostic = Math.random() > 0.7
-          const fileType = isDiagnostic ? "pdf" : getRandomElement(["jpg", "png", "pdf"])
-          const fileName = isDiagnostic
-            ? `Diagnoseausdruck_${Math.floor(Math.random() * 1000)}.${fileType}`
-            : `Foto_${Math.floor(Math.random() * 1000)}.${fileType}`
+      // Erstelle 1-3 Artikel pro Reklamation
+      const numItems = Math.floor(Math.random() * 3) + 1
+      for (let j = 0; j < numItems; j++) {
+        const manufacturerIndex = Math.floor(Math.random() * articleManufacturers.length)
+        const nameIndex = Math.floor(Math.random() * articleNames.length)
 
-          await supabase.from("complaint_attachments").insert({
-            id: uuidv4(),
-            complaint_id: complaintId,
-            file_name: fileName,
-            file_path: `/uploads/complaints/${complaintId}/${fileName}`,
-            file_type: fileType,
-            is_diagnostic: isDiagnostic,
-          })
+        const item = {
+          id: crypto.randomUUID(),
+          complaint_id: complaintId,
+          manufacturer: articleManufacturers[manufacturerIndex],
+          article_index: `ART-${1000 + Math.floor(Math.random() * 9000)}`,
+          article_name: articleNames[nameIndex],
+          purchase_date: new Date(Date.now() - Math.floor(Math.random() * 365) * 24 * 60 * 60 * 1000).toISOString(),
+          quantity: Math.floor(Math.random() * 3) + 1,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
+
+        const { error: itemError } = await supabase.from("complaint_items").insert(item)
+
+        if (itemError) {
+          throw new Error(`Fehler beim Erstellen des Artikels: ${itemError.message}`)
         }
       }
+
+      // Erstelle Fahrzeugdaten
+      const vehicleTypeIndex = Math.floor(Math.random() * vehicleTypes.length)
+      const manufacturerIndex = Math.floor(Math.random() * manufacturers.length)
+      const modelIndex = Math.floor(Math.random() * models.length)
+      const yearIndex = Math.floor(Math.random() * years.length)
+      const installerIndex = Math.floor(Math.random() * installers.length)
+
+      const installationDate = new Date(Date.now() - Math.floor(Math.random() * 365) * 24 * 60 * 60 * 1000)
+      const removalDate = new Date(installationDate.getTime() + Math.floor(Math.random() * 180) * 24 * 60 * 60 * 1000)
+      const mileageInstallation = 50000 + Math.floor(Math.random() * 50000)
+      const mileageRemoval = mileageInstallation + Math.floor(Math.random() * 10000)
+
+      const vehicleData = {
+        id: crypto.randomUUID(),
+        complaint_id: complaintId,
+        vehicle_type: vehicleTypes[vehicleTypeIndex],
+        manufacturer: manufacturers[manufacturerIndex],
+        model: models[modelIndex],
+        vehicle_type_detail: vehicleTypes[vehicleTypeIndex] === "car" ? "Limousine" : "Standard",
+        year: years[yearIndex],
+        vin: `WBA${Math.floor(Math.random() * 10000000000000000)}`,
+        installation_date: installationDate.toISOString(),
+        removal_date: removalDate.toISOString(),
+        mileage_installation: mileageInstallation,
+        mileage_removal: mileageRemoval,
+        installer: installers[installerIndex],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+
+      const { error: vehicleError } = await supabase.from("complaint_vehicle_data").insert(vehicleData)
+
+      if (vehicleError) {
+        throw new Error(`Fehler beim Erstellen der Fahrzeugdaten: ${vehicleError.message}`)
+      }
+
+      // Erstelle Anhänge, wenn vorhanden
+      if (hasAttachments || hasDiagnosticOutput) {
+        const numAttachments = Math.floor(Math.random() * 3) + 1
+        for (let j = 0; j < numAttachments; j++) {
+          const isDiagnostic = j === 0 && hasDiagnosticOutput
+
+          const attachment = {
+            id: crypto.randomUUID(),
+            complaint_id: complaintId,
+            file_name: isDiagnostic
+              ? `diagnose_${Math.floor(Math.random() * 1000)}.pdf`
+              : `anhang_${Math.floor(Math.random() * 1000)}.jpg`,
+            file_path: `/uploads/${isDiagnostic ? "diagnose" : "anhang"}_${Math.floor(Math.random() * 1000)}${
+              isDiagnostic ? ".pdf" : ".jpg"
+            }`,
+            file_type: isDiagnostic ? "application/pdf" : "image/jpeg",
+            is_diagnostic: isDiagnostic,
+            created_at: new Date().toISOString(),
+          }
+
+          const { error: attachmentError } = await supabase.from("complaint_attachments").insert(attachment)
+
+          if (attachmentError) {
+            throw new Error(`Fehler beim Erstellen des Anhangs: ${attachmentError.message}`)
+          }
+        }
+      }
+
+      complaints.push(complaint)
     }
 
-    return NextResponse.json({ success: true, message: "Testdaten erfolgreich erstellt", count: 10 })
-  } catch (error) {
+    return NextResponse.json({
+      success: true,
+      message: "Testdaten für Reklamationen erfolgreich erstellt",
+      count: complaints.length,
+    })
+  } catch (error: any) {
     console.error("Fehler beim Erstellen der Testdaten:", error)
-    return NextResponse.json({ success: false, error: "Fehler beim Erstellen der Testdaten" }, { status: 500 })
+    return NextResponse.json(
+      {
+        success: false,
+        message: `Fehler beim Erstellen der Testdaten: ${error.message}`,
+      },
+      { status: 500 },
+    )
   }
 }

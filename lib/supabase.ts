@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js"
+import { createClient as supabaseCreateClient } from "@supabase/supabase-js"
 
 // Typen für die Datenbank-Tabellen
 export type Return = {
@@ -34,12 +34,12 @@ if (!supabaseUrl || !supabaseKey) {
   console.warn("Supabase-Umgebungsvariablen fehlen. Bitte überprüfen Sie Ihre Konfiguration.")
 }
 
-export const supabaseAdmin = createClient(supabaseUrl, supabaseKey)
+export const supabaseAdmin = supabaseCreateClient(supabaseUrl, supabaseKey)
 
 // Client-seitiger Supabase-Client (mit dem anonymen Schlüssel)
-let supabaseClient: ReturnType<typeof createClient> | null = null
+let supabaseClient: ReturnType<typeof supabaseCreateClient> | null = null
 
-export const getSupabaseClient = () => {
+export const createClient = () => {
   if (supabaseClient) return supabaseClient
 
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
@@ -49,6 +49,6 @@ export const getSupabaseClient = () => {
     return null
   }
 
-  supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
+  supabaseClient = supabaseCreateClient(supabaseUrl, supabaseAnonKey)
   return supabaseClient
 }

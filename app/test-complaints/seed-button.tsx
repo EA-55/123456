@@ -2,10 +2,10 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { Loader2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
-import { RefreshCw } from "lucide-react"
 
-export default function SeedComplaintsButton() {
+export function SeedButton() {
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
 
@@ -14,28 +14,27 @@ export default function SeedComplaintsButton() {
       return
     }
 
-    setIsLoading(true)
-
     try {
+      setIsLoading(true)
       const response = await fetch("/api/seed-complaints", {
         method: "POST",
       })
 
+      if (!response.ok) {
+        throw new Error("Fehler beim Erstellen der Testdaten")
+      }
+
       const data = await response.json()
 
-      if (response.ok) {
-        toast({
-          title: "Erfolg",
-          description: `${data.count} Testdaten für Reklamationen wurden erstellt.`,
-        })
-      } else {
-        throw new Error(data.error || "Ein Fehler ist aufgetreten")
-      }
+      toast({
+        title: "Erfolg",
+        description: `${data.count} Testdaten für Reklamationen wurden erfolgreich erstellt.`,
+      })
     } catch (error) {
-      console.error("Fehler beim Seeden:", error)
+      console.error("Fehler beim Erstellen der Testdaten:", error)
       toast({
         title: "Fehler",
-        description: "Die Testdaten konnten nicht erstellt werden.",
+        description: "Beim Erstellen der Testdaten ist ein Fehler aufgetreten.",
         variant: "destructive",
       })
     } finally {
@@ -44,9 +43,9 @@ export default function SeedComplaintsButton() {
   }
 
   return (
-    <Button onClick={handleSeed} disabled={isLoading}>
-      {isLoading && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
-      Testdaten für Reklamationen erstellen
+    <Button onClick={handleSeed} disabled={isLoading} className="w-full">
+      {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+      {isLoading ? "Wird erstellt..." : "Testdaten für Reklamationen erstellen"}
     </Button>
   )
 }
