@@ -167,6 +167,7 @@ export default function Home() {
               { href: "#brands", label: "Marken" },
               { href: "/arbeitszeiten-und-lieferung", label: "Arbeitszeiten & Lieferung" },
               { href: "/rueckgabe", label: "Rückgabe" },
+              { href: "/reklamation", label: "Reklamation" },
               { href: "#contact", label: "Kontakt" },
             ].map((item, index) => (
               <motion.div
@@ -296,6 +297,7 @@ export default function Home() {
                   { href: "#brands", label: "Marken" },
                   { href: "/arbeitszeiten-und-lieferung", label: "Arbeitszeiten & Lieferung" },
                   { href: "/rueckgabe", label: "Rückgabe" },
+                  { href: "/reklamation", label: "Reklamation" },
                   { href: "#contact", label: "Kontakt" },
                 ].map((item, index) => (
                   <motion.li
