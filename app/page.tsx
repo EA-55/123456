@@ -5,6 +5,7 @@ import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 import { motion, useScroll, useTransform } from "framer-motion"
 import dynamic from "next/dynamic"
+import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { SchemaJsonLd } from "@/components/schema-json-ld"
@@ -15,13 +16,10 @@ const ClientComponents = dynamic(() => import("@/components/client-components"),
   ssr: true,
 })
 
-// Dynamisches Laden des NavigationMenu (vorher MobileMenu)
-const NavigationMenu = dynamic(
-  () => import("@/components/navigation-menu").then((mod) => ({ default: mod.NavigationMenu })),
-  {
-    ssr: false,
-  },
-)
+// Dynamisches Laden des MobileMenu
+const MobileMenu = dynamic(() => import("@/components/mobile-menu"), {
+  ssr: false,
+})
 
 // Subtiler Partikeleffekt für cinematisches Gefühl
 const CinematicParticles = () => {
@@ -85,6 +83,7 @@ export default function Home() {
   const { scrollY } = useScroll()
   const headerOpacity = useTransform(scrollY, [0, 100], [1, 0.8])
   const headerScale = useTransform(scrollY, [0, 100], [1, 0.98])
+  const [menuOpen, setMenuOpen] = useState(false)
 
   // Schema.org JSON-LD für die Hauptseite
   const schemaData = {
@@ -257,18 +256,11 @@ export default function Home() {
                 </Link>
               </Button>
             </motion.div>
-            {/* Hier wurde MobileMenu durch NavigationMenu ersetzt */}
             <div className="md:hidden">
               <button
                 className="flex items-center justify-center"
-                onClick={() => {
-                  // Hier würde normalerweise der State für das Menü gesetzt werden
-                  // Da wir aber das dynamische Laden verwenden, müssen wir einen anderen Ansatz wählen
-                  const menuElement = document.getElementById("mobile-navigation")
-                  if (menuElement) {
-                    menuElement.classList.toggle("hidden")
-                  }
-                }}
+                onClick={() => setMenuOpen(true)}
+                aria-label="Menü öffnen"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -288,6 +280,7 @@ export default function Home() {
                 </svg>
               </button>
             </div>
+            {menuOpen && <MobileMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />}
           </div>
         </div>
       </motion.header>
