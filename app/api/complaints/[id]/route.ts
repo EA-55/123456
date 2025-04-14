@@ -1,92 +1,109 @@
-import { NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase"
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = params.id
     const supabase = createClient()
 
-    const { data, error } = await supabase
+    // Reklamation abrufen
+    const { data: complaint, error: complaintError } = await supabase
       .from("complaints")
-      .select(`
-        *,
-        complaint_items(*),
-        complaint_vehicle_data(*),
-        complaint_attachments(*)
-      `)
+      .select("*")
       .eq("id", id)
       .single()
 
-    if (error) {
-      console.error("Error fetching complaint:", error)
-      return NextResponse.json({ error: "Failed to fetch complaint" }, { status: 500 })
+    if (complaintError) {
+      console.error("Fehler beim Abrufen der Reklamation:", complaintError)
+      return NextResponse.json({ error: "Fehler beim Abrufen der Reklamation" }, { status: 500 })
     }
 
-    if (!data) {
-      return NextResponse.json({ error: "Complaint not found" }, { status: 404 })
+    // Artikel abrufen
+    const { data: items, error: itemsError } = await supabase.from("complaint_items").select("*").eq("complaint_id", id)
+
+    if (itemsError) {
+      console.error("Fehler beim Abrufen der Artikel:", itemsError)
+      return NextResponse.json({ error: "Fehler beim Abrufen der Artikel" }, { status: 500 })
     }
 
-    return NextResponse.json(data)
+    // Fahrzeugdaten abrufen
+    const { data: vehicleData, error: vehicleError } = await supabase
+      .from("complaint_vehicle_data")
+      .select("*")
+      .eq("complaint_id", id)
+      .maybeSingle()
+
+    if (vehicleError) {
+      console.error("Fehler beim Abrufen der Fahrzeugdaten:", vehicleError)
+      return NextResponse.json({ error: "Fehler beim Abrufen der Fahrzeugdaten" }, { status: 500 })
+    }
+
+    // Anhänge abrufen
+    const { data: attachments, error: attachmentsError } = await supabase
+      .from("complaint_attachments")
+      .select("*")
+      .eq("complaint_id", id)
+
+    if (attachmentsError) {
+      console.error("Fehler beim Abrufen der Anhänge:", attachmentsError)
+      return NextResponse.json({ error: "Fehler beim Abrufen der Anhänge" }, { status: 500 })
+    }
+
+    return NextResponse.json({
+      complaint,
+      items,
+      vehicleData,
+      attachments,
+    })
   } catch (error) {
-    console.error("Error fetching complaint:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Fehler bei der Verarbeitung:", error)
+    return NextResponse.json({ error: "Fehler bei der Verarbeitung" }, { status: 500 })
   }
 }
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = params.id
-    const updates = await request.json()
+    const data = await request.json()
     const supabase = createClient()
 
-    // Aktualisieren der Hauptdaten der Reklamation
-    if (updates.complaint) {
-      const { error: complaintError } = await supabase.from("complaints").update(updates.complaint).eq("id", id)
+    // Reklamation aktualisieren
+    const { error: updateError } = await supabase
+      .from("complaints")
+      .update({
+        status: data.status,
+        processor_name: data.processorName,
+      })
+      .eq("id", id)
 
-      if (complaintError) {
-        console.error("Error updating complaint:", complaintError)
-        return NextResponse.json({ error: "Failed to update complaint" }, { status: 500 })
-      }
-    }
-
-    // Aktualisieren des Status
-    if (updates.status) {
-      const { error: statusError } = await supabase.from("complaints").update({ status: updates.status }).eq("id", id)
-
-      if (statusError) {
-        console.error("Error updating complaint status:", statusError)
-        return NextResponse.json({ error: "Failed to update complaint status" }, { status: 500 })
-      }
+    if (updateError) {
+      console.error("Fehler beim Aktualisieren der Reklamation:", updateError)
+      return NextResponse.json({ error: "Fehler beim Aktualisieren der Reklamation" }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Error updating complaint:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Fehler bei der Verarbeitung:", error)
+    return NextResponse.json({ error: "Fehler bei der Verarbeitung" }, { status: 500 })
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = params.id
     const supabase = createClient()
 
-    // Löschen der zugehörigen Daten in den Untertabellen
-    await supabase.from("complaint_attachments").delete().eq("complaint_id", id)
-    await supabase.from("complaint_items").delete().eq("complaint_id", id)
-    await supabase.from("complaint_vehicle_data").delete().eq("complaint_id", id)
-
-    // Löschen des Haupteintrags
+    // Reklamation löschen (Kaskadenlöschung für verknüpfte Einträge)
     const { error } = await supabase.from("complaints").delete().eq("id", id)
 
     if (error) {
-      console.error("Error deleting complaint:", error)
-      return NextResponse.json({ error: "Failed to delete complaint" }, { status: 500 })
+      console.error("Fehler beim Löschen der Reklamation:", error)
+      return NextResponse.json({ error: "Fehler beim Löschen der Reklamation" }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Error deleting complaint:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Fehler bei der Verarbeitung:", error)
+    return NextResponse.json({ error: "Fehler bei der Verarbeitung" }, { status: 500 })
   }
 }
