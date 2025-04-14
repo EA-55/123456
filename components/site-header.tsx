@@ -2,9 +2,11 @@
 
 import Link from "next/link"
 import { useState } from "react"
+// Expliziter Import mit geschweiften Klammern
 import { MobileMenu } from "./mobile-menu"
 
 export function SiteHeader() {
+  // Vereinfachter State, nur was wir brauchen
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
@@ -53,6 +55,7 @@ export function SiteHeader() {
           </button>
         </div>
       </div>
+      {/* Klare Trennung der MobileMenu-Komponente */}
       <MobileMenu isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
     </header>
   )
