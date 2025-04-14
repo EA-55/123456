@@ -2,12 +2,11 @@
 
 import Link from "next/link"
 import { useState } from "react"
-// Expliziter Import mit geschweiften Klammern
-import { MobileMenu } from "./mobile-menu"
+// Neuer Import mit neuem Namen
+import { NavigationMenu } from "./navigation-menu"
 
 export function SiteHeader() {
-  // Vereinfachter State, nur was wir brauchen
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-white">
@@ -35,7 +34,7 @@ export function SiteHeader() {
           </nav>
         </div>
         <div className="flex flex-1 items-center justify-end">
-          <button className="md:hidden" onClick={() => setMobileMenuOpen(true)} aria-label="Menü öffnen">
+          <button className="md:hidden" onClick={() => setMenuOpen(true)} aria-label="Menü öffnen">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
@@ -55,8 +54,8 @@ export function SiteHeader() {
           </button>
         </div>
       </div>
-      {/* Klare Trennung der MobileMenu-Komponente */}
-      <MobileMenu isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
+      {/* Verwendung der neuen Komponente */}
+      {menuOpen && <NavigationMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />}
     </header>
   )
 }

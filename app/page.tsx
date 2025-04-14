@@ -15,10 +15,13 @@ const ClientComponents = dynamic(() => import("@/components/client-components"),
   ssr: true,
 })
 
-// Dynamisches Laden des MobileMenu
-const MobileMenu = dynamic(() => import("@/components/mobile-menu"), {
-  ssr: false,
-})
+// Dynamisches Laden des NavigationMenu (vorher MobileMenu)
+const NavigationMenu = dynamic(
+  () => import("@/components/navigation-menu").then((mod) => ({ default: mod.NavigationMenu })),
+  {
+    ssr: false,
+  },
+)
 
 // Subtiler Partikeleffekt für cinematisches Gefühl
 const CinematicParticles = () => {
@@ -254,7 +257,37 @@ export default function Home() {
                 </Link>
               </Button>
             </motion.div>
-            <MobileMenu />
+            {/* Hier wurde MobileMenu durch NavigationMenu ersetzt */}
+            <div className="md:hidden">
+              <button
+                className="flex items-center justify-center"
+                onClick={() => {
+                  // Hier würde normalerweise der State für das Menü gesetzt werden
+                  // Da wir aber das dynamische Laden verwenden, müssen wir einen anderen Ansatz wählen
+                  const menuElement = document.getElementById("mobile-navigation")
+                  if (menuElement) {
+                    menuElement.classList.toggle("hidden")
+                  }
+                }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-6 w-6"
+                >
+                  <line x1="4" x2="20" y1="12" y2="12" />
+                  <line x1="4" x2="20" y1="6" y2="6" />
+                  <line x1="4" x2="20" y1="18" y2="18" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </motion.header>

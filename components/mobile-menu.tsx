@@ -3,30 +3,23 @@
 import Link from "next/link"
 import { useEffect } from "react"
 
-// Klare Typdefinition für die Props
-interface MobileMenuProps {
-  isOpen: boolean
-  onClose: () => void
-}
-
-// Expliziter Export als benannte Funktion
-export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
+// Einfache Implementierung der MobileMenu-Komponente
+export function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   useEffect(() => {
-    // Escape-Taste zum Schließen
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose()
+    if (isOpen) {
+      const handleEscape = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          onClose()
+        }
       }
+
+      document.addEventListener("keydown", handleEscape)
+      return () => document.removeEventListener("keydown", handleEscape)
     }
+  }, [isOpen, onClose])
 
-    document.addEventListener("keydown", handleEscape)
-    return () => document.removeEventListener("keydown", handleEscape)
-  }, [onClose])
-
-  // Frühes Return, wenn nicht geöffnet
   if (!isOpen) return null
 
-  // Vereinfachtes JSX mit klaren Funktionen
   return (
     <div className="fixed inset-0 z-50 bg-black/50" onClick={onClose}>
       <div
@@ -95,3 +88,6 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
     </div>
   )
 }
+
+// Default export für dynamischen Import
+export default MobileMenu
