@@ -1,124 +1,92 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
-import { Menu, X, ChevronRight } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { useEffect } from "react"
 
-import { Button } from "@/components/ui/button"
+interface MobileMenuProps {
+  isOpen: boolean
+  onClose: () => void
+}
 
-export default function MobileMenu() {
-  const [isOpen, setIsOpen] = useState(false)
+export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose()
+      }
+    }
 
-  const toggleMenu = () => {
-    setIsOpen(!isOpen)
-  }
+    document.addEventListener("keydown", handleEscape)
+    return () => document.removeEventListener("keydown", handleEscape)
+  }, [onClose])
 
-  const closeMenu = () => {
-    setIsOpen(false)
-  }
+  if (!isOpen) return null
 
   return (
-    <div className="md:hidden">
-      <Button variant="ghost" size="icon" onClick={toggleMenu} aria-label="Menü öffnen">
-        <Menu className="h-6 w-6" />
-      </Button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/50 z-50"
-            onClick={closeMenu}
+    <div className="fixed inset-0 z-50 bg-black/50" onClick={onClose}>
+      <div
+        className="fixed right-0 top-0 h-full w-3/4 max-w-sm bg-white p-6 shadow-lg"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button className="absolute right-4 top-4 text-gray-500 hover:text-gray-900" onClick={onClose}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-6 w-6"
           >
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="fixed right-0 top-0 h-full w-3/4 max-w-xs bg-background p-4 shadow-lg"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-end mb-6">
-                <Button variant="ghost" size="icon" onClick={closeMenu} aria-label="Menü schließen">
-                  <X className="h-6 w-6" />
-                </Button>
-              </div>
-
-              <nav className="space-y-4">
-                <Link
-                  href="/"
-                  className="flex items-center justify-between py-2 border-b text-foreground hover:text-primary transition-colors"
-                  onClick={closeMenu}
-                >
-                  <span>Startseite</span>
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-                <Link
-                  href="/motorinstandsetzung"
-                  className="flex items-center justify-between py-2 border-b text-foreground hover:text-primary transition-colors"
-                  onClick={closeMenu}
-                >
-                  <span>Motorinstandsetzung</span>
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-                <Link
-                  href="/software-tuning"
-                  className="flex items-center justify-between py-2 border-b text-foreground hover:text-primary transition-colors"
-                  onClick={closeMenu}
-                >
-                  <span>Software & Tuning</span>
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-                <Link
-                  href="/arbeitszeiten-und-lieferung"
-                  className="flex items-center justify-between py-2 border-b text-foreground hover:text-primary transition-colors"
-                  onClick={closeMenu}
-                >
-                  <span>Arbeitszeiten & Lieferung</span>
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-                <Link
-                  href="/rueckgabe"
-                  className="flex items-center justify-between py-2 border-b text-foreground hover:text-primary transition-colors"
-                  onClick={closeMenu}
-                >
-                  <span>Rückgabe</span>
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-                <Link
-                  href="/reklamation"
-                  className="flex items-center justify-between py-2 border-b text-foreground hover:text-primary transition-colors"
-                  onClick={closeMenu}
-                >
-                  <span>Reklamation</span>
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-                <Link
-                  href="/b2b-registrierung"
-                  className="flex items-center justify-between py-2 border-b text-foreground hover:text-primary transition-colors"
-                  onClick={closeMenu}
-                >
-                  <span>B2B Registrierung</span>
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-              </nav>
-
-              <div className="mt-8">
-                <Button asChild className="w-full" onClick={closeMenu}>
-                  <a href="https://tm1.carparts-cat.com/login/atevis" target="_blank" rel="noopener noreferrer">
-                    Zum Shop
-                    <ChevronRight className="ml-2 h-4 w-4" />
-                  </a>
-                </Button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <path d="M18 6 6 18"></path>
+            <path d="m6 6 12 12"></path>
+          </svg>
+          <span className="sr-only">Menü schließen</span>
+        </button>
+        <nav className="mt-8 flex flex-col gap-4">
+          <Link href="/" className="text-lg font-medium transition-colors hover:text-primary" onClick={onClose}>
+            Startseite
+          </Link>
+          <Link
+            href="/motorinstandsetzung"
+            className="text-lg font-medium transition-colors hover:text-primary"
+            onClick={onClose}
+          >
+            Motorinstandsetzung
+          </Link>
+          <Link
+            href="/software-tuning"
+            className="text-lg font-medium transition-colors hover:text-primary"
+            onClick={onClose}
+          >
+            Software Tuning
+          </Link>
+          <Link
+            href="/rueckgabe"
+            className="text-lg font-medium transition-colors hover:text-primary"
+            onClick={onClose}
+          >
+            Rückgabe
+          </Link>
+          <Link
+            href="/reklamation"
+            className="text-lg font-medium transition-colors hover:text-primary"
+            onClick={onClose}
+          >
+            Reklamation
+          </Link>
+          <Link
+            href="/b2b-registrierung"
+            className="text-lg font-medium transition-colors hover:text-primary"
+            onClick={onClose}
+          >
+            B2B Registrierung
+          </Link>
+        </nav>
+      </div>
     </div>
   )
 }
