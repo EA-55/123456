@@ -1,9 +1,10 @@
-import { NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/db"
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+// Korrekte Typisierung für Next.js 15 Route-Handler
+export async function GET(request: NextRequest, context: { params: { id: string } }) {
   try {
-    const id = params.id
+    const id = context.params.id
     const supabase = createClient()
 
     // Fetch the complaint
@@ -68,9 +69,10 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+// Korrekte Typisierung für PUT-Methode
+export async function PUT(request: NextRequest, context: { params: { id: string } }) {
   try {
-    const id = params.id
+    const id = context.params.id
     const supabase = createClient()
     const body = await request.json()
 

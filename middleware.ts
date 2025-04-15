@@ -1,26 +1,25 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { isAuthenticated } from "./app/admin/auth"
 
-export function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl
+// Middleware ohne Node.js-spezifische Module
+export function middleware(request: NextRequest) {
+  // Admin-Bereich schützen
+  if (request.nextUrl.pathname.startsWith("/admin") && !request.nextUrl.pathname.includes("/admin/login")) {
+    const authCookie = request.cookies.get("admin_auth")?.value
 
-  // Debugging
-  console.log(`Middleware ausgeführt für: ${pathname}`)
-  console.log(`Auth-Cookie: ${req.cookies.get("admin_auth")?.value}`)
-
-  // Only apply to /admin routes (except /admin/login)
-  if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
-    if (!isAuthenticated(req)) {
-      console.log("Nicht authentifiziert, Weiterleitung zur Login-Seite")
-      return NextResponse.redirect(new URL("/admin/login", req.url))
+    if (authCookie !== "authenticated") {
+      const url = new URL("/admin/login", request.url)
+      url.searchParams.set("redirect", request.nextUrl.pathname)
+      return NextResponse.redirect(url)
     }
-    console.log("Authentifiziert, Zugriff erlaubt")
   }
 
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: [
+    // Schütze alle Admin-Routen außer Login
+    "/admin/:path*",
+  ],
 }
