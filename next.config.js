@@ -21,7 +21,6 @@ const nextConfig = {
         hostname: "images.unsplash.com",
         pathname: "**",
       },
-      // Weitere vertrauenswürdige Domains hier hinzufügen
     ],
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 60 * 60 * 24 * 7, // 7 Tage Cache für Bilder
@@ -38,8 +37,7 @@ const nextConfig = {
 
   // Experimentelle Funktionen für Next.js 15
   experimental: {
-    // Korrekte Syntax für Next.js 15
-    serverExternalPackages: [], // Früher: serverComponentsExternalPackages
+    // Nur unterstützte experimentelle Funktionen
     typedRoutes: true,
   },
 }

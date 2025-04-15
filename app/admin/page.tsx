@@ -2,19 +2,26 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import InquiriesTab from "./components/inquiries-tab"
-import ReturnsTab from "./components/returns-tab"
-import ReklamationenTab from "./components/reklamationen-tab"
-import PopupManagerTab from "./components/popup-manager-tab"
+
+// Dynamischer Import der Tab-Komponenten, um zirkuläre Abhängigkeiten zu vermeiden
+const InquiriesTab = dynamic(() => import("./components/inquiries-tab"), { ssr: false })
+const ReturnsTab = dynamic(() => import("./components/returns-tab"), { ssr: false })
+const ReklamationenTab = dynamic(() => import("./components/reklamationen-tab"), { ssr: false })
+const PopupManagerTab = dynamic(() => import("./components/popup-manager-tab"), { ssr: false })
+
+// Verhindere statisches Prerendering für diese Seite
+export const dynamic = "force-dynamic"
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [activeTab, setActiveTab] = useState("inquiries")
+  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        setIsLoading(true)
         const response = await fetch("/api/admin/check-auth")
         if (response.ok) {
           setIsAuthenticated(true)
@@ -24,6 +31,8 @@ export default function AdminPage() {
       } catch (error) {
         console.error("Error checking authentication:", error)
         router.push("/admin/login")
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -39,8 +48,12 @@ export default function AdminPage() {
     }
   }
 
-  if (!isAuthenticated) {
+  if (isLoading) {
     return <div className="flex justify-center items-center h-screen">Überprüfe Authentifizierung...</div>
+  }
+
+  if (!isAuthenticated) {
+    return null // Router wird die Seite umleiten, kein Rendering nötig
   }
 
   return (
