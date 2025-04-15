@@ -1,3 +1,5 @@
+import { createClient as supabaseCreateClient } from "@supabase/supabase-js"
+
 interface User {
   id: string
   email: string
@@ -80,3 +82,11 @@ class InMemoryDB {
 const db = new InMemoryDB()
 
 export default db
+
+// Supabase client function
+export function createClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+
+  return supabaseCreateClient(supabaseUrl, supabaseAnonKey)
+}
