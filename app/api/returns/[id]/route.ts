@@ -1,11 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/db"
+import { createServerClient } from "@/lib/db"
 
-// Korrekte Typisierung für Next.js 15
 export async function GET(request: NextRequest, context: { params: { id: string } }) {
   try {
     const id = context.params.id
-    const supabase = createClient()
+    const supabase = createServerClient()
 
     // Fetch the return
     const { data, error } = await supabase.from("returns").select("*").eq("id", id).single()
@@ -29,7 +28,7 @@ export async function GET(request: NextRequest, context: { params: { id: string 
 export async function PUT(request: NextRequest, context: { params: { id: string } }) {
   try {
     const id = context.params.id
-    const supabase = createClient()
+    const supabase = createServerClient()
     const body = await request.json()
 
     // Update the return

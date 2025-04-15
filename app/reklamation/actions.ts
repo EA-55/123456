@@ -1,16 +1,14 @@
 "use server"
 
-import { createClient } from "@supabase/supabase-js"
+import { createServerClient } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { v4 as uuidv4 } from "uuid"
 
-// Supabase Client erstellen
-const supabaseUrl = process.env.SUPABASE_URL || ""
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ""
-const supabase = createClient(supabaseUrl, supabaseKey)
-
 export async function submitReklamation(formData: any) {
   try {
+    // Supabase-Client für Server-Aktionen erstellen
+    const supabase = createServerClient()
+
     // Generiere eine UUID für die Reklamation
     const complaintId = uuidv4()
 

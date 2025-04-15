@@ -1,10 +1,7 @@
-import { NextResponse } from "next/server"
-import fs from "fs"
-import path from "path"
+import { type NextRequest, NextResponse } from "next/server"
+import { createServerClient } from "@/lib/db"
 import { v4 as uuidv4 } from "uuid"
 import nodemailer from "nodemailer"
-
-const INQUIRIES_FILE = path.join(process.cwd(), "motor-inquiries.json")
 
 // Überprüfen der Umgebungsvariablen
 const checkEnvVariables = () => {
@@ -33,37 +30,6 @@ const createTransporter = () => {
       pass: process.env.SMTP_PASS,
     },
   })
-}
-
-function readInquiries() {
-  console.log("Lese Anfragen aus Datei:", INQUIRIES_FILE)
-  if (!fs.existsSync(INQUIRIES_FILE)) {
-    console.log("Anfragen-Datei existiert nicht. Erstelle neue Datei.")
-    fs.writeFileSync(INQUIRIES_FILE, "[]")
-    return []
-  }
-  const data = fs.readFileSync(INQUIRIES_FILE, "utf8")
-  console.log("Gelesene Daten:", data)
-  if (!data.trim()) {
-    console.log("Datei ist leer. Gebe leeres Array zurück.")
-    return []
-  }
-  try {
-    return JSON.parse(data)
-  } catch (error) {
-    console.error("Fehler beim Parsen der JSON-Daten:", error)
-    return []
-  }
-}
-
-function writeInquiries(inquiries: any[]) {
-  console.log("Schreibe Anfragen in Datei:", INQUIRIES_FILE)
-  try {
-    fs.writeFileSync(INQUIRIES_FILE, JSON.stringify(inquiries, null, 2))
-    console.log("Anfragen in Datei geschrieben. Anzahl der Anfragen:", inquiries.length)
-  } catch (error) {
-    console.error("Fehler beim Schreiben der Anfragen:", error)
-  }
 }
 
 async function sendEmailNotification(inquiry: any) {
@@ -111,7 +77,7 @@ async function sendEmailNotification(inquiry: any) {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   console.log("POST-Anfrage für Motoranfrage erhalten")
   try {
     const inquiryData = await req.json()
@@ -127,12 +93,16 @@ export async function POST(req: Request) {
 
     console.log("Neue Anfrage erstellt:", newInquiry)
 
-    // Speichern in der Datei
-    const inquiries = readInquiries()
-    inquiries.push(newInquiry)
-    writeInquiries(inquiries)
+    // Speichern in Supabase
+    const supabase = createServerClient()
+    const { error } = await supabase.from("motor_inquiries").insert(newInquiry)
 
-    console.log("Neue Anfrage gespeichert. Aktuelle Anzahl der Anfragen:", inquiries.length)
+    if (error) {
+      console.error("Fehler beim Speichern der Anfrage:", error)
+      return NextResponse.json({ success: false, error: "Fehler beim Speichern der Anfrage" }, { status: 500 })
+    }
+
+    console.log("Neue Anfrage gespeichert.")
 
     // Senden der E-Mail-Benachrichtigung
     const emailResult = await sendEmailNotification(inquiryData)
@@ -152,9 +122,21 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   console.log("GET-Anfrage für Motoranfragen erhalten")
-  const inquiries = readInquiries()
-  console.log("Zurückgegebene Anfragen:", inquiries)
-  return NextResponse.json(inquiries)
+  try {
+    const supabase = createServerClient()
+    const { data, error } = await supabase.from("motor_inquiries").select("*")
+
+    if (error) {
+      console.error("Fehler beim Abrufen der Anfragen:", error)
+      return NextResponse.json({ success: false, error: "Fehler beim Abrufen der Anfragen" }, { status: 500 })
+    }
+
+    console.log("Zurückgegebene Anfragen:", data.length)
+    return NextResponse.json(data)
+  } catch (error) {
+    console.error("Fehler beim Verarbeiten der Anfrage:", error)
+    return NextResponse.json({ success: false, error: "Interner Serverfehler" }, { status: 500 })
+  }
 }

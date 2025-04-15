@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server"
-import db from "@/lib/db"
+import { type NextRequest, NextResponse } from "next/server"
+import { createServerClient } from "@/lib/db"
+import { v4 as uuidv4 } from "uuid"
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
 
@@ -10,23 +11,35 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Alle Pflichtfelder müssen ausgefüllt sein" }, { status: 400 })
     }
 
+    const supabase = createServerClient()
+
     // Erstellen einer neuen Rückgabe
-    const newReturn = db.createRetour({
-      userId: "guest", // Für nicht angemeldete Benutzer
-      orderNumber: "Keine Bestellnummer", // Standardwert
-      productName: data.articles.map((article: any) => `${article.articleNumber} (${article.quantity}x)`).join(", "),
+    const newReturn = {
+      id: uuidv4(),
+      user_id: "guest", // Für nicht angemeldete Benutzer
+      order_number: data.orderNumber || "Keine Bestellnummer", // Standardwert
+      product_name: data.articles.map((article: any) => `${article.articleNumber} (${article.quantity}x)`).join(", "),
       reason: data.articles.map((article: any) => `${article.articleNumber}: ${article.returnReason}`).join("; "),
       status: "pending",
-      customerNumber: data.customerNumber,
-      customerName: data.customerName,
-      packageCondition: data.articles[0].condition, // Vereinfachung: Wir nehmen den Zustand des ersten Artikels
-      productCondition: "Siehe Details",
-      contactEmail: data.email,
-      contactPhone: "Nicht angegeben", // Standardwert
-      additionalInfo: data.comments || "",
-      processorName: "", // Wird später vom Admin ausgefüllt
+      customer_number: data.customerNumber,
+      customer_name: data.customerName,
+      package_condition: data.articles[0].condition, // Vereinfachung: Wir nehmen den Zustand des ersten Artikels
+      product_condition: "Siehe Details",
+      contact_email: data.email,
+      contact_phone: data.phone || "Nicht angegeben", // Standardwert
+      additional_info: data.comments || "",
+      processor_name: "", // Wird später vom Admin ausgefüllt
       articles: JSON.stringify(data.articles), // Speichern der vollständigen Artikeldaten
-    })
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+
+    const { error } = await supabase.from("returns").insert(newReturn)
+
+    if (error) {
+      console.error("Fehler beim Speichern der Rückgabe:", error)
+      return NextResponse.json({ error: "Ein Fehler ist bei der Verarbeitung aufgetreten" }, { status: 500 })
+    }
 
     return NextResponse.json({ success: true, return: newReturn, id: newReturn.id })
   } catch (error) {
@@ -35,10 +48,17 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const returns = db.getAllRetouren()
-    return NextResponse.json({ returns })
+    const supabase = createServerClient()
+    const { data, error } = await supabase.from("returns").select("*")
+
+    if (error) {
+      console.error("Fehler beim Abrufen der Rückgaben:", error)
+      return NextResponse.json({ error: "Ein Fehler ist beim Abrufen der Rückgaben aufgetreten" }, { status: 500 })
+    }
+
+    return NextResponse.json({ returns: data })
   } catch (error) {
     console.error("Fehler beim Abrufen der Rückgaben:", error)
     return NextResponse.json({ error: "Ein Fehler ist beim Abrufen der Rückgaben aufgetreten" }, { status: 500 })

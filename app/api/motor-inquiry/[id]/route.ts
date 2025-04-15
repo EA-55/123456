@@ -1,47 +1,45 @@
-import { NextResponse } from "next/server"
-import fs from "fs"
-import path from "path"
+import { type NextRequest, NextResponse } from "next/server"
+import { createServerClient } from "@/lib/db"
 
-const INQUIRIES_FILE = path.join(process.cwd(), "motor-inquiries.json")
+export async function PUT(request: NextRequest, context: { params: { id: string } }) {
+  console.log("Received PUT request to update motor inquiry:", context.params.id)
+  try {
+    const id = context.params.id
+    const { status } = await request.json()
+    const supabase = createServerClient()
 
-function readInquiries() {
-  if (!fs.existsSync(INQUIRIES_FILE)) {
-    return []
+    const { data, error } = await supabase.from("motor_inquiries").update({ status }).eq("id", id).select().single()
+
+    if (error) {
+      console.log("Error updating inquiry:", error)
+      return NextResponse.json({ error: "Anfrage nicht gefunden" }, { status: 404 })
+    }
+
+    console.log("Inquiry updated:", id)
+    return NextResponse.json({ success: true, data })
+  } catch (error) {
+    console.error("Error processing request:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
-  const data = fs.readFileSync(INQUIRIES_FILE, "utf8")
-  return JSON.parse(data)
 }
 
-function writeInquiries(inquiries: any[]) {
-  fs.writeFileSync(INQUIRIES_FILE, JSON.stringify(inquiries, null, 2))
-}
+export async function DELETE(request: NextRequest, context: { params: { id: string } }) {
+  console.log("Received DELETE request for motor inquiry:", context.params.id)
+  try {
+    const id = context.params.id
+    const supabase = createServerClient()
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
-  console.log("Received PUT request to update motor inquiry:", params.id)
-  const id = params.id
-  const { status } = await req.json()
-  const inquiries = readInquiries()
-  const inquiryIndex = inquiries.findIndex((i: any) => i.id === id)
+    const { error } = await supabase.from("motor_inquiries").delete().eq("id", id)
 
-  if (inquiryIndex === -1) {
-    console.log("Inquiry not found:", id)
-    return NextResponse.json({ error: "Anfrage nicht gefunden" }, { status: 404 })
+    if (error) {
+      console.log("Error deleting inquiry:", error)
+      return NextResponse.json({ error: "Anfrage nicht gefunden" }, { status: 404 })
+    }
+
+    console.log("Inquiry deleted:", id)
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("Error processing request:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
-
-  inquiries[inquiryIndex].status = status
-  writeInquiries(inquiries)
-
-  console.log("Inquiry updated:", id)
-  return NextResponse.json({ success: true })
-}
-
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
-  console.log("Received DELETE request for motor inquiry:", params.id)
-  const id = params.id
-  let inquiries = readInquiries()
-  inquiries = inquiries.filter((i: any) => i.id !== id)
-  writeInquiries(inquiries)
-
-  console.log("Inquiry deleted:", id)
-  return NextResponse.json({ success: true })
 }

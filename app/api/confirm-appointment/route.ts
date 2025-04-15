@@ -1,35 +1,35 @@
-import { NextResponse } from "next/server"
-import fs from "fs"
-import path from "path"
+import { type NextRequest, NextResponse } from "next/server"
+import { createServerClient } from "@/lib/db"
 
-const APPOINTMENTS_FILE = path.join(process.cwd(), "appointments.json")
+export async function POST(req: NextRequest) {
+  try {
+    const { date, name, email } = await req.json()
+    const supabase = createServerClient()
 
-function readAppointments() {
-  if (!fs.existsSync(APPOINTMENTS_FILE)) {
-    return []
+    // Find the appointment
+    const { data, error: fetchError } = await supabase
+      .from("appointments")
+      .select("*")
+      .eq("date", date.split("T")[0])
+      .eq("name", name)
+      .eq("email", email)
+      .single()
+
+    if (fetchError || !data) {
+      return NextResponse.json({ error: "Termin nicht gefunden" }, { status: 400 })
+    }
+
+    // Update the appointment
+    const { error: updateError } = await supabase.from("appointments").update({ confirmed: true }).eq("id", data.id)
+
+    if (updateError) {
+      console.error("Error confirming appointment:", updateError)
+      return NextResponse.json({ error: "Fehler bei der Terminbestätigung" }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, message: "Termin erfolgreich bestätigt" })
+  } catch (error) {
+    console.error("Error processing confirm appointment request:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
-  const data = fs.readFileSync(APPOINTMENTS_FILE, "utf8")
-  return JSON.parse(data)
-}
-
-function writeAppointments(appointments: any[]) {
-  fs.writeFileSync(APPOINTMENTS_FILE, JSON.stringify(appointments, null, 2))
-}
-
-export async function POST(req: Request) {
-  const { date, name, email } = await req.json()
-
-  const appointments = readAppointments()
-  const appointmentIndex = appointments.findIndex(
-    (a) => a.date.split("T")[0] === date.split("T")[0] && a.name === name && a.email === email,
-  )
-
-  if (appointmentIndex === -1) {
-    return NextResponse.json({ error: "Termin nicht gefunden" }, { status: 400 })
-  }
-
-  appointments[appointmentIndex].confirmed = true
-  writeAppointments(appointments)
-
-  return NextResponse.json({ success: true, message: "Termin erfolgreich bestätigt" })
 }

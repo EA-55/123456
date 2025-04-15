@@ -1,3 +1,5 @@
+import { type NextRequest, NextResponse } from "next/server"
+import { createServerClient } from "@/lib/db"
 import nodemailer from "nodemailer"
 
 const transporter = nodemailer.createTransport({
@@ -10,33 +12,41 @@ const transporter = nodemailer.createTransport({
   },
 })
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
 
     // Validierung der Daten
     if (!data.companyName || !data.contactPerson || !data.email || !data.phone || !data.address) {
-      return new Response(JSON.stringify({ success: false, message: "Bitte füllen Sie alle Pflichtfelder aus." }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      })
+      return NextResponse.json({ success: false, message: "Bitte füllen Sie alle Pflichtfelder aus." }, { status: 400 })
     }
 
     // Generieren einer eindeutigen ID
-    const id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+    const id = crypto.randomUUID()
 
     // Erstellen des Registrierungsobjekts
     const registration = {
       id,
       type: "b2b",
-      data,
-      timestamp: new Date().toISOString(),
+      company_name: data.companyName,
+      contact_person: data.contactPerson,
+      email: data.email,
+      phone: data.phone,
+      address: data.address,
+      business_type: data.businessType || "",
+      message: data.message || "",
+      created_at: new Date().toISOString(),
       status: "new",
     }
 
-    // In einer echten Implementierung würden Sie hier die Daten in einer Datenbank speichern
-    // Da wir localStorage serverseitig nicht verwenden können, geben wir die Daten zurück
-    // und speichern sie clientseitig
+    // Speichern in Supabase
+    const supabase = createServerClient()
+    const { error } = await supabase.from("b2b_registrations").insert(registration)
+
+    if (error) {
+      console.error("Fehler beim Speichern der B2B-Registrierung:", error)
+      return NextResponse.json({ success: false, message: "Fehler beim Speichern der Registrierung." }, { status: 500 })
+    }
 
     // E-Mail senden
     const { companyName, contactPerson, email, phone, address, businessType, message } = data
@@ -68,19 +78,19 @@ export async function POST(request: Request) {
 
     console.log("Message sent: %s", info.messageId)
 
-    return new Response(
-      JSON.stringify({
+    return NextResponse.json(
+      {
         success: true,
         message: "Ihre Registrierung wurde erfolgreich übermittelt.",
         registration,
-      }),
-      { status: 200, headers: { "Content-Type": "application/json" } },
+      },
+      { status: 200 },
     )
   } catch (error) {
     console.error("B2B Registration error:", error)
-    return new Response(
-      JSON.stringify({ success: false, message: "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut." }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
+    return NextResponse.json(
+      { success: false, message: "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut." },
+      { status: 500 },
     )
   }
 }

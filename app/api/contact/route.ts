@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
+import { createServerClient } from "@/lib/db"
 import nodemailer from "nodemailer"
 import { v4 as uuidv4 } from "uuid"
 
@@ -31,19 +32,30 @@ const createTransporter = () => {
   })
 }
 
-export async function POST(req: Request) {
-  const { name, email, phone, message } = await req.json()
-
-  // Erstellen einer Kontaktanfrage für den Admin-Bereich
-  const contactInquiry = {
-    id: uuidv4(),
-    type: "contact",
-    data: { name, email, phone, message },
-    timestamp: new Date().toISOString(),
-    status: "new",
-  }
-
+export async function POST(req: NextRequest) {
   try {
+    const { name, email, phone, message } = await req.json()
+
+    // Erstellen einer Kontaktanfrage für den Admin-Bereich
+    const contactInquiry = {
+      id: uuidv4(),
+      type: "contact",
+      name,
+      email,
+      phone,
+      message,
+      created_at: new Date().toISOString(),
+      status: "new",
+    }
+
+    // Speichern in Supabase
+    const supabase = createServerClient()
+    const { error: dbError } = await supabase.from("contact_inquiries").insert(contactInquiry)
+
+    if (dbError) {
+      console.error("Fehler beim Speichern der Kontaktanfrage:", dbError)
+    }
+
     // E-Mail senden
     const transporter = createTransporter()
 
@@ -92,12 +104,11 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error("Detailed error:", error)
 
-    // Trotz Fehler die Anfrage zurückgeben, damit sie im Admin-Bereich angezeigt werden kann
+    // Fehler zurückgeben
     return NextResponse.json(
       {
         error: "Failed to send email",
         details: error.message,
-        inquiry: contactInquiry,
       },
       { status: 500 },
     )
