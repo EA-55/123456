@@ -29,7 +29,7 @@ interface Inquiry {
   status: "new" | "in-progress" | "completed" | "archived"
 }
 
-export function InquiriesTab() {
+export default function InquiriesTab() {
   const [contactInquiries, setContactInquiries] = useState<Inquiry[]>([])
   const [motorInquiries, setMotorInquiries] = useState<Inquiry[]>([])
   const [b2bRegistrations, setB2bRegistrations] = useState<Inquiry[]>([])

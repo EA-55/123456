@@ -5,7 +5,6 @@ import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 import { motion, useScroll, useTransform } from "framer-motion"
 import dynamic from "next/dynamic"
-import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { SchemaJsonLd } from "@/components/schema-json-ld"
@@ -83,7 +82,6 @@ export default function Home() {
   const { scrollY } = useScroll()
   const headerOpacity = useTransform(scrollY, [0, 100], [1, 0.8])
   const headerScale = useTransform(scrollY, [0, 100], [1, 0.98])
-  const [menuOpen, setMenuOpen] = useState(false)
 
   // Schema.org JSON-LD für die Hauptseite
   const schemaData = {
@@ -169,7 +167,6 @@ export default function Home() {
               { href: "#brands", label: "Marken" },
               { href: "/arbeitszeiten-und-lieferung", label: "Arbeitszeiten & Lieferung" },
               { href: "/rueckgabe", label: "Rückgabe" },
-              { href: "/reklamation", label: "Reklamation" },
               { href: "#contact", label: "Kontakt" },
             ].map((item, index) => (
               <motion.div
@@ -256,31 +253,7 @@ export default function Home() {
                 </Link>
               </Button>
             </motion.div>
-            <div className="md:hidden">
-              <button
-                className="flex items-center justify-center"
-                onClick={() => setMenuOpen(true)}
-                aria-label="Menü öffnen"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-6 w-6"
-                >
-                  <line x1="4" x2="20" y1="12" y2="12" />
-                  <line x1="4" x2="20" y1="6" y2="6" />
-                  <line x1="4" x2="20" y1="18" y2="18" />
-                </svg>
-              </button>
-            </div>
-            {menuOpen && <MobileMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />}
+            <MobileMenu />
           </div>
         </div>
       </motion.header>
@@ -323,7 +296,6 @@ export default function Home() {
                   { href: "#brands", label: "Marken" },
                   { href: "/arbeitszeiten-und-lieferung", label: "Arbeitszeiten & Lieferung" },
                   { href: "/rueckgabe", label: "Rückgabe" },
-                  { href: "/reklamation", label: "Reklamation" },
                   { href: "#contact", label: "Kontakt" },
                 ].map((item, index) => (
                   <motion.li

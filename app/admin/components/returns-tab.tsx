@@ -6,7 +6,7 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { format } from "date-fns"
 import { de } from "date-fns/locale"
-import { Package, Search, Filter, RefreshCw, ChevronDown, ChevronUp, Edit, FileText, Trash } from "lucide-react"
+import { Package, Search, Filter, RefreshCw, ChevronDown, ChevronUp, Edit, FileText } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -26,53 +26,45 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 
-interface ReturnItem {
-  id: string
-  return_id: string
-  article_number: string
-  quantity: number
-  delivery_note_number?: string
+interface Article {
+  articleNumber: string
+  quantity: string
+  deliveryNoteNumber?: string
   condition: string
-  return_reason: string
-  other_reason?: string
-  created_at: string
-  updated_at: string
+  returnReason: string
+  otherReason?: string
 }
 
 interface Return {
   id: string
-  customer_number: string
-  customer_name: string
-  email: string
-  comments?: string
+  userId: string
+  orderNumber: string
+  productName: string
+  reason: string
   status: string
-  processor_name?: string
-  created_at: string
-  updated_at: string
+  createdAt: string
+  customerNumber: string
+  customerName: string
+  packageCondition: string
+  productCondition: string
+  contactEmail: string
+  contactPhone: string
+  additionalInfo?: string
+  processorName?: string
+  articles?: string // JSON-String mit Artikeldaten
 }
 
-export function ReturnsTab() {
+export default function ReturnsTab() {
   const [returns, setReturns] = useState<Return[]>([])
   const [filteredReturns, setFilteredReturns] = useState<Return[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [selectedReturn, setSelectedReturn] = useState<Return | null>(null)
-  const [returnItems, setReturnItems] = useState<ReturnItem[]>([])
+  const [parsedArticles, setParsedArticles] = useState<Article[]>([])
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [processorName, setProcessorName] = useState("")
   const [notes, setNotes] = useState("")
   const [newStatus, setNewStatus] = useState("")
@@ -123,9 +115,10 @@ export function ReturnsTab() {
       const term = searchTerm.toLowerCase()
       filtered = filtered.filter(
         (item) =>
-          item.customer_name.toLowerCase().includes(term) ||
-          item.customer_number.toLowerCase().includes(term) ||
-          item.email.toLowerCase().includes(term),
+          item.customerName.toLowerCase().includes(term) ||
+          item.orderNumber.toLowerCase().includes(term) ||
+          item.productName.toLowerCase().includes(term) ||
+          item.customerNumber.toLowerCase().includes(term),
       )
     }
 
@@ -135,76 +128,36 @@ export function ReturnsTab() {
     }
 
     // Sortieren nach Erstellungsdatum (neueste zuerst)
-    filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
     setFilteredReturns(filtered)
   }
 
-  const handleViewDetails = async (returnItem: Return) => {
+  const handleViewDetails = (returnItem: Return) => {
     setSelectedReturn(returnItem)
-    setIsDetailsOpen(true)
 
-    try {
-      const response = await fetch(`/api/returns/${returnItem.id}`)
-      const data = await response.json()
-
-      if (data.items) {
-        setReturnItems(data.items)
-      } else {
-        setReturnItems([])
+    // Parse articles if available
+    if (returnItem.articles) {
+      try {
+        const articles = JSON.parse(returnItem.articles)
+        setParsedArticles(articles)
+      } catch (e) {
+        console.error("Fehler beim Parsen der Artikel:", e)
+        setParsedArticles([])
       }
-    } catch (error) {
-      console.error("Fehler beim Laden der Artikeldetails:", error)
-      toast({
-        variant: "destructive",
-        title: "Fehler",
-        description: "Die Artikeldetails konnten nicht geladen werden.",
-      })
-      setReturnItems([])
+    } else {
+      setParsedArticles([])
     }
+
+    setIsDetailsOpen(true)
   }
 
   const handleEditReturn = (returnItem: Return) => {
     setSelectedReturn(returnItem)
-    setProcessorName(returnItem.processor_name || "")
-    setNotes(returnItem.comments || "")
+    setProcessorName(returnItem.processorName || "")
+    setNotes(returnItem.additionalInfo || "")
     setNewStatus(returnItem.status)
     setIsEditOpen(true)
-  }
-
-  const handleDeleteReturn = (returnItem: Return) => {
-    setSelectedReturn(returnItem)
-    setIsDeleteDialogOpen(true)
-  }
-
-  const confirmDeleteReturn = async () => {
-    if (!selectedReturn) return
-
-    try {
-      const response = await fetch(`/api/returns/${selectedReturn.id}`, {
-        method: "DELETE",
-      })
-
-      if (!response.ok) {
-        throw new Error("Fehler beim Löschen der Rückgabe")
-      }
-
-      // Aktualisieren der lokalen Daten
-      setReturns((prev) => prev.filter((item) => item.id !== selectedReturn.id))
-      setIsDeleteDialogOpen(false)
-
-      toast({
-        title: "Erfolgreich gelöscht",
-        description: "Die Rückgabe wurde erfolgreich gelöscht.",
-      })
-    } catch (error) {
-      console.error("Fehler beim Löschen der Rückgabe:", error)
-      toast({
-        variant: "destructive",
-        title: "Fehler",
-        description: "Die Rückgabe konnte nicht gelöscht werden.",
-      })
-    }
   }
 
   const handleUpdateReturn = async () => {
@@ -236,8 +189,8 @@ export function ReturnsTab() {
             ? {
                 ...item,
                 status: newStatus,
-                processor_name: processorName,
-                comments: notes,
+                processorName,
+                additionalInfo: notes,
               }
             : item,
         ),
@@ -295,18 +248,33 @@ export function ReturnsTab() {
     }
   }
 
+  const getReturnReasonText = (reason: string) => {
+    switch (reason) {
+      case "customer_withdrawal":
+        return "Kunden Rücktritt"
+      case "deposit":
+        return "Altteilpfand"
+      case "damaged":
+        return "Ware ist beschädigt"
+      case "wrong_order":
+        return "Falsch bestellt"
+      default:
+        return reason // Für "other" oder direkt eingegebene Gründe
+    }
+  }
+
   const getPackageConditionText = (condition: string) => {
     switch (condition) {
-      case "Originalverpackung":
+      case "original":
         return "Originalverpackung"
-      case "Geöffnet, aber intakt":
+      case "opened":
         return "Geöffnet, aber intakt"
-      case "Beschädigt":
+      case "damaged":
         return "Beschädigt"
-      case "Keine Verpackung":
+      case "missing":
         return "Keine Verpackung"
       default:
-        return condition
+        return condition // Falls der Wert direkt verwendet wird
     }
   }
 
@@ -341,7 +309,7 @@ export function ReturnsTab() {
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Suche nach Kunde, Kundennummer oder E-Mail..."
+                placeholder="Suche nach Kunde, Bestellnummer oder Produkt..."
                 className="pl-8"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -353,7 +321,7 @@ export function ReturnsTab() {
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Status filtern" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-200 shadow-md">
+                <SelectContent>
                   <SelectItem value="all">Alle Status</SelectItem>
                   <SelectItem value="pending">Ausstehend</SelectItem>
                   <SelectItem value="approved">Genehmigt</SelectItem>
@@ -384,8 +352,8 @@ export function ReturnsTab() {
                   <TableRow>
                     <TableHead className="w-[100px]">Datum</TableHead>
                     <TableHead>Kunde</TableHead>
-                    <TableHead>Kundennr.</TableHead>
-                    <TableHead>E-Mail</TableHead>
+                    <TableHead>Bestellnr.</TableHead>
+                    <TableHead>Artikel</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Aktionen</TableHead>
                   </TableRow>
@@ -397,10 +365,10 @@ export function ReturnsTab() {
                         className="cursor-pointer hover:bg-muted/50"
                         onClick={() => toggleRowExpanded(returnItem.id)}
                       >
-                        <TableCell className="font-mono text-xs">{formatDate(returnItem.created_at)}</TableCell>
-                        <TableCell>{returnItem.customer_name}</TableCell>
-                        <TableCell>{returnItem.customer_number}</TableCell>
-                        <TableCell className="max-w-[200px] truncate">{returnItem.email}</TableCell>
+                        <TableCell className="font-mono text-xs">{formatDate(returnItem.createdAt)}</TableCell>
+                        <TableCell>{returnItem.customerName}</TableCell>
+                        <TableCell>{returnItem.orderNumber}</TableCell>
+                        <TableCell className="max-w-[200px] truncate">{returnItem.productName}</TableCell>
                         <TableCell>{getStatusBadge(returnItem.status)}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
@@ -438,17 +406,6 @@ export function ReturnsTab() {
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-destructive hover:text-destructive"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleDeleteReturn(returnItem)
-                              }}
-                            >
-                              <Trash className="h-4 w-4" />
-                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -459,10 +416,13 @@ export function ReturnsTab() {
                               <div>
                                 <h4 className="font-medium mb-2">Kundeninformationen</h4>
                                 <p className="text-sm mb-1">
-                                  <span className="font-medium">Kundennummer:</span> {returnItem.customer_number}
+                                  <span className="font-medium">Kundennummer:</span> {returnItem.customerNumber}
                                 </p>
                                 <p className="text-sm mb-1">
-                                  <span className="font-medium">E-Mail:</span> {returnItem.email}
+                                  <span className="font-medium">E-Mail:</span> {returnItem.contactEmail}
+                                </p>
+                                <p className="text-sm mb-1">
+                                  <span className="font-medium">Telefon:</span> {returnItem.contactPhone}
                                 </p>
                               </div>
                               <div>
@@ -472,11 +432,11 @@ export function ReturnsTab() {
                                 </p>
                                 <p className="text-sm mb-1">
                                   <span className="font-medium">Bearbeiter:</span>{" "}
-                                  {returnItem.processor_name || "Noch nicht zugewiesen"}
+                                  {returnItem.processorName || "Noch nicht zugewiesen"}
                                 </p>
                                 <p className="text-sm mb-1">
                                   <span className="font-medium">Eingereicht am:</span>{" "}
-                                  {formatDate(returnItem.created_at)}
+                                  {formatDate(returnItem.createdAt)}
                                 </p>
                               </div>
                             </div>
@@ -504,7 +464,7 @@ export function ReturnsTab() {
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="overview">Übersicht</TabsTrigger>
-                <TabsTrigger value="articles">Artikel ({returnItems.length})</TabsTrigger>
+                <TabsTrigger value="articles">Artikel ({parsedArticles.length})</TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview" className="space-y-4 pt-4">
@@ -514,13 +474,16 @@ export function ReturnsTab() {
                       <h3 className="text-lg font-medium">Kundeninformationen</h3>
                       <div className="mt-2 space-y-2">
                         <p>
-                          <span className="font-medium">Name:</span> {selectedReturn.customer_name}
+                          <span className="font-medium">Name:</span> {selectedReturn.customerName}
                         </p>
                         <p>
-                          <span className="font-medium">Kundennummer:</span> {selectedReturn.customer_number}
+                          <span className="font-medium">Kundennummer:</span> {selectedReturn.customerNumber}
                         </p>
                         <p>
-                          <span className="font-medium">E-Mail:</span> {selectedReturn.email}
+                          <span className="font-medium">E-Mail:</span> {selectedReturn.contactEmail}
+                        </p>
+                        <p>
+                          <span className="font-medium">Telefon:</span> {selectedReturn.contactPhone}
                         </p>
                       </div>
                     </div>
@@ -529,7 +492,10 @@ export function ReturnsTab() {
                       <h3 className="text-lg font-medium">Bestellinformationen</h3>
                       <div className="mt-2 space-y-2">
                         <p>
-                          <span className="font-medium">Eingereicht am:</span> {formatDate(selectedReturn.created_at)}
+                          <span className="font-medium">Bestellnummer:</span> {selectedReturn.orderNumber}
+                        </p>
+                        <p>
+                          <span className="font-medium">Eingereicht am:</span> {formatDate(selectedReturn.createdAt)}
                         </p>
                         <p>
                           <span className="font-medium">Status:</span> {getStatusBadge(selectedReturn.status)}
@@ -544,7 +510,7 @@ export function ReturnsTab() {
                       <div className="mt-2 space-y-2">
                         <p>
                           <span className="font-medium">Bearbeiter:</span>{" "}
-                          {selectedReturn.processor_name || "Noch nicht zugewiesen"}
+                          {selectedReturn.processorName || "Noch nicht zugewiesen"}
                         </p>
                         <p>
                           <span className="font-medium">Rückgabe-ID:</span> {selectedReturn.id}
@@ -553,32 +519,32 @@ export function ReturnsTab() {
                     </div>
                   </div>
 
-                  {selectedReturn.comments && (
+                  {selectedReturn.additionalInfo && (
                     <div className="md:col-span-2">
                       <h3 className="text-lg font-medium">Zusätzliche Informationen</h3>
-                      <div className="mt-2 p-3 bg-muted rounded-md">{selectedReturn.comments}</div>
+                      <div className="mt-2 p-3 bg-muted rounded-md">{selectedReturn.additionalInfo}</div>
                     </div>
                   )}
                 </div>
               </TabsContent>
 
               <TabsContent value="articles" className="space-y-4 pt-4">
-                {returnItems.length > 0 ? (
+                {parsedArticles.length > 0 ? (
                   <div className="space-y-4">
-                    {returnItems.map((article, index) => (
-                      <div key={article.id} className="p-4 border rounded-md">
+                    {parsedArticles.map((article, index) => (
+                      <div key={index} className="p-4 border rounded-md">
                         <h3 className="font-medium mb-2">Artikel {index + 1}</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <p className="text-sm mb-1">
-                              <span className="font-medium">Artikelnummer:</span> {article.article_number}
+                              <span className="font-medium">Artikelnummer:</span> {article.articleNumber}
                             </p>
                             <p className="text-sm mb-1">
                               <span className="font-medium">Menge:</span> {article.quantity}
                             </p>
-                            {article.delivery_note_number && (
+                            {article.deliveryNoteNumber && (
                               <p className="text-sm mb-1">
-                                <span className="font-medium">Lieferscheinnummer:</span> {article.delivery_note_number}
+                                <span className="font-medium">Lieferscheinnummer:</span> {article.deliveryNoteNumber}
                               </p>
                             )}
                           </div>
@@ -587,11 +553,12 @@ export function ReturnsTab() {
                               <span className="font-medium">Zustand:</span> {getPackageConditionText(article.condition)}
                             </p>
                             <p className="text-sm mb-1">
-                              <span className="font-medium">Grund für Rückgabe:</span> {article.return_reason}
+                              <span className="font-medium">Grund für Rückgabe:</span>{" "}
+                              {getReturnReasonText(article.returnReason)}
                             </p>
-                            {article.other_reason && (
+                            {article.otherReason && (
                               <p className="text-sm mb-1">
-                                <span className="font-medium">Sonstiger Grund:</span> {article.other_reason}
+                                <span className="font-medium">Sonstiger Grund:</span> {article.otherReason}
                               </p>
                             )}
                           </div>
@@ -642,7 +609,7 @@ export function ReturnsTab() {
                   <SelectTrigger>
                     <SelectValue placeholder="Status auswählen" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-200 shadow-md">
+                  <SelectContent>
                     <SelectItem value="pending">Ausstehend</SelectItem>
                     <SelectItem value="approved">Genehmigt</SelectItem>
                     <SelectItem value="rejected">Abgelehnt</SelectItem>
@@ -683,25 +650,6 @@ export function ReturnsTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Rückgabe löschen</AlertDialogTitle>
-            <AlertDialogDescription>
-              Sind Sie sicher, dass Sie diese Rückgabe löschen möchten? Diese Aktion kann nicht rückgängig gemacht
-              werden.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteReturn} className="bg-destructive text-destructive-foreground">
-              Löschen
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </motion.div>
   )
 }

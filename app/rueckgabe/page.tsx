@@ -17,7 +17,6 @@ import * as z from "zod"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
-import { useToast } from "@/components/ui/use-toast"
 
 // Schema für einen einzelnen Artikel
 const articleSchema = z.object({
@@ -44,7 +43,6 @@ export default function ReturnPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccessDialog, setShowSuccessDialog] = useState(false)
   const [returnId, setReturnId] = useState("")
-  const { toast } = useToast()
 
   // Formular initialisieren
   const form = useForm<ReturnFormValues>({
@@ -57,7 +55,7 @@ export default function ReturnPage() {
       articles: [
         {
           articleNumber: "",
-          quantity: "1",
+          quantity: "",
           deliveryNoteNumber: "",
           condition: "",
           returnReason: "",
@@ -78,31 +76,30 @@ export default function ReturnPage() {
     setIsSubmitting(true)
 
     try {
-      const response = await fetch("/api/returns", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || "Ein Fehler ist aufgetreten")
+      // Verarbeite die Daten für jeden Artikel
+      const processedData = {
+        ...data,
+        articles: data.articles.map((article) => ({
+          ...article,
+          returnReason:
+            article.returnReason === "Sonstiger Grund"
+              ? `Sonstiger Grund: ${article.otherReason}`
+              : article.returnReason,
+        })),
       }
 
-      // Erfolgreiche Rückgabe
-      setReturnId(result.id)
+      console.log("Absenden der Daten:", processedData)
+
+      // Simuliere API-Aufruf
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+
+      // Generiere eine zufällige Rückgabe-ID
+      setReturnId("RMA-" + Math.floor(Math.random() * 10000))
       setShowSuccessDialog(true)
       form.reset()
     } catch (error) {
       console.error("Fehler beim Absenden:", error)
-      toast({
-        variant: "destructive",
-        title: "Fehler",
-        description: "Die Rückgabe konnte nicht erstellt werden. Bitte versuchen Sie es später erneut.",
-      })
+      // Hier könnte eine Fehlerbehandlung erfolgen
     } finally {
       setIsSubmitting(false)
     }
@@ -112,7 +109,7 @@ export default function ReturnPage() {
   const addArticle = () => {
     append({
       articleNumber: "",
-      quantity: "1",
+      quantity: "",
       deliveryNoteNumber: "",
       condition: "",
       returnReason: "",
