@@ -38,14 +38,9 @@ const nextConfig = {
 
   // Experimentelle Funktionen für Next.js 15
   experimental: {
-    // Optimierte Server-Komponenten
-    serverComponentsExternalPackages: [],
-    // Verbesserte Typensicherheit
+    // Korrekte Syntax für Next.js 15
+    serverExternalPackages: [], // Früher: serverComponentsExternalPackages
     typedRoutes: true,
-    // Optimierte Bildverarbeitung
-    optimizeImages: true,
-    // Optimierte Schriften
-    optimizeFonts: true,
   },
 }
 

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-// Explizit für Edge Runtime konfigurieren
-export const runtime = "edge"
+// Aktualisierte Runtime-Konfiguration für Next.js 15
+export const runtime = "experimental-edge"
 
 // Middleware ohne Node.js-spezifische Module
 export function middleware(request: NextRequest) {
