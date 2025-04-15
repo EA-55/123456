@@ -7,23 +7,16 @@ export const config = {
 }
 
 // Middleware-Funktion mit verbesserter Fehlerbehandlung
-export default function middleware(request: NextRequest) {
+export function middleware(request: NextRequest) {
   try {
     // Überprüfe, ob der Benutzer angemeldet ist
     const authCookie = request.cookies.get("admin_auth")
 
     // Wenn der Benutzer nicht angemeldet ist und versucht, auf den Admin-Bereich zuzugreifen
-    if (!authCookie && !request.nextUrl.pathname.startsWith("/admin/login")) {
+    if (!authCookie?.value && !request.nextUrl.pathname.includes("/admin/login")) {
       // Leite zur Login-Seite weiter
       const loginUrl = new URL("/admin/login", request.url)
       return NextResponse.redirect(loginUrl)
-    }
-
-    // Wenn der Benutzer angemeldet ist und versucht, auf die Login-Seite zuzugreifen
-    if (authCookie && request.nextUrl.pathname === "/admin/login") {
-      // Leite zum Admin-Dashboard weiter
-      const dashboardUrl = new URL("/admin", request.url)
-      return NextResponse.redirect(dashboardUrl)
     }
 
     // Erlaube den Zugriff
