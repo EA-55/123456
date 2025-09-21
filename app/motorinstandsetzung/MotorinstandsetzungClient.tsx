@@ -226,7 +226,7 @@ export default function MotorinstandsetzungClient() {
         {/* Update the background image */}
         <div className="absolute inset-0">
           <Image
-            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/adad-FppmyQe7v138OXuvvJYsgLRTBgx8KQ.png"
+            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/design-mode-images/adad-gJwxGZOBilEJGRkyOPkmGszUnRiygq.png"
             alt="Professioneller Hochleistungsmotor"
             fill
             className="object-cover object-center"
@@ -395,7 +395,7 @@ export default function MotorinstandsetzungClient() {
               <div className="relative rounded-xl overflow-hidden border-2 border-primary/20 shadow-lg">
                 <div className="relative" style={{ paddingTop: "75%" }}>
                   <Image
-                    src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/adad-FppmyQe7v138OXuvvJYsgLRTBgx8KQ.png"
+                    src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/design-mode-images/adad-gJwxGZOBilEJGRkyOPkmGszUnRiygq.png"
                     alt="Professioneller Hochleistungsmotor - Detailansicht"
                     fill
                     className="object-cover object-center"

@@ -63,7 +63,7 @@ export default function SoftwareTuning() {
       <div className="relative bg-gradient-to-b from-gray-900 to-gray-800 text-white overflow-hidden">
         <div className="absolute inset-0">
           <Image
-            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/adad-FppmyQe7v138OXuvvJYsgLRTBgx8KQ.png"
+            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/design-mode-images/adad-gJwxGZOBilEJGRkyOPkmGszUnRiygq.png"
             alt="Professionelle Software-Optimierung und Tuning"
             fill
             className="object-cover object-center opacity-40"
@@ -206,7 +206,7 @@ export default function SoftwareTuning() {
               <div className="relative rounded-xl overflow-hidden border-2 border-primary/20 shadow-lg">
                 <div className="relative" style={{ paddingTop: "75%" }}>
                   <Image
-                    src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/adad-FppmyQe7v138OXuvvJYsgLRTBgx8KQ.png"
+                    src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/design-mode-images/adad-gJwxGZOBilEJGRkyOPkmGszUnRiygq.png"
                     alt="Professionelle Software-Optimierung und Tuning"
                     fill
                     className="object-cover object-center"

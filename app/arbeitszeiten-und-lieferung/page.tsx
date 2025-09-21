@@ -78,7 +78,7 @@ export default function ArbeitszeienUndLieferung() {
       >
         <motion.div className="absolute inset-0" style={{ y, scale }}>
           <Image
-            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Download-CqRiTGZ61dtZ0EZkKgRVMmFtpwvHYY.jpeg"
+            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/design-mode-images/Download-hILvCg7p5r1Bnbj5RrVb35tLuB6lJT.jpeg"
             alt="Arbeitszeiten und Lieferung Hero"
             fill
             className="object-cover"

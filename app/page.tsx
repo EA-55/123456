@@ -147,7 +147,7 @@ export default function Home() {
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
             <Link href="/">
               <Image
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/autopartner24_3-MUIweDkQmdOJ4fuLvbLdnfy5leqtmt.png"
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/design-mode-images/autopartner24_3-007KX3ZwXQ1toHXaYWwMUb9pTt0Ej7.png"
                 alt="ErsatzteilPartner24 Logo - Kfz-Ersatzteile und Autozubehör"
                 width={200}
                 height={50}
@@ -272,7 +272,7 @@ export default function Home() {
             >
               <Link href="/">
                 <Image
-                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/autopartner24_3-MUIweDkQmdOJ4fuLvbLdnfy5leqtmt.png"
+                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/design-mode-images/autopartner24_3-007KX3ZwXQ1toHXaYWwMUb9pTt0Ej7.png"
                   alt="ErsatzteilPartner24 Logo - Kfz-Ersatzteile und Autozubehör"
                   width={150}
                   height={40}

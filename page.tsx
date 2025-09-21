@@ -127,7 +127,7 @@ export default function Home() {
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <Image
-            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/autopartner24_3-MUIweDkQmdOJ4fuLvbLdnfy5leqtmt.png"
+            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/design-mode-images/autopartner24_3-007KX3ZwXQ1toHXaYWwMUb9pTt0Ej7.png"
             alt="ErsatzteilPartner24 Logo"
             width={200}
             height={50}
@@ -347,7 +347,7 @@ export default function Home() {
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             <div>
               <Image
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/autopartner24_3-MUIweDkQmdOJ4fuLvbLdnfy5leqtmt.png"
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/design-mode-images/autopartner24_3-007KX3ZwXQ1toHXaYWwMUb9pTt0Ej7.png"
                 alt="ErsatzteilPartner24 Logo"
                 width={150}
                 height={40}

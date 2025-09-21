@@ -30,7 +30,7 @@ const ImageSlider = () => {
   return (
     <div className="relative h-[600px] w-full overflow-hidden">
       <Image
-        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Download-CqRiTGZ61dtZ0EZkKgRVMmFtpwvHYY.jpeg"
+        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/design-mode-images/Download-hILvCg7p5r1Bnbj5RrVb35tLuB6lJT.jpeg"
         alt="Hero image"
         fill
         className="object-cover"
@@ -371,7 +371,7 @@ export default function ClientComponents() {
             />
             <div className="relative rounded-xl overflow-hidden border-2 border-primary/20 shadow-2xl shadow-primary/20">
               <Image
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/adad-FppmyQe7v138OXuvvJYsgLRTBgx8KQ.png"
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/design-mode-images/adad-gJwxGZOBilEJGRkyOPkmGszUnRiygq.png"
                 alt="Professionelle Motorinstandsetzung - Hochleistungsmotor"
                 width={800}
                 height={600}
