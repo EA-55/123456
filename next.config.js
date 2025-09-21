@@ -1,45 +1,23 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Linting und TypeScript-Konfiguration
-  eslint: {
-    ignoreDuringBuilds: true,
+  experimental: {
+    appDir: true,
   },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-
-  // Bild-Optimierung
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "hebbkx1anhila5yf.public.blob.vercel-storage.com",
-        pathname: "**",
-      },
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-        pathname: "**",
-      },
-    ],
+    domains: ["hebbkx1anhila5yf.public.blob.vercel-storage.com"],
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 60 * 60 * 24 * 7, // 7 Tage Cache für Bilder
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
-
-  // Performance-Optimierungen
+  swcMinify: true,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production",
+  },
+  // Aktiviere Gzip-Komprimierung
   compress: true,
+  // Optimiere für Produktionsumgebung
   reactStrictMode: true,
-
-  // Deployment-Konfiguration
+  // Optimiere für statische Seiten
   output: "standalone",
-
-  // Experimentelle Funktionen für Next.js 15
-  experimental: {
-    // Nur unterstützte experimentelle Funktionen
-    typedRoutes: true,
-  },
 }
 
 module.exports = nextConfig

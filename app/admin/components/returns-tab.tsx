@@ -6,7 +6,7 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { format } from "date-fns"
 import { de } from "date-fns/locale"
-import { Package, Search, Filter, RefreshCw, ChevronDown, ChevronUp, Edit, FileText } from "lucide-react"
+import { Package, Search, Filter, RefreshCw, ChevronDown, ChevronUp, Edit } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -25,16 +25,6 @@ import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-interface Article {
-  articleNumber: string
-  quantity: string
-  deliveryNoteNumber?: string
-  condition: string
-  returnReason: string
-  otherReason?: string
-}
 
 interface Return {
   id: string
@@ -52,17 +42,15 @@ interface Return {
   contactPhone: string
   additionalInfo?: string
   processorName?: string
-  articles?: string // JSON-String mit Artikeldaten
 }
 
-export default function ReturnsTab() {
+export function ReturnsTab() {
   const [returns, setReturns] = useState<Return[]>([])
   const [filteredReturns, setFilteredReturns] = useState<Return[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [selectedReturn, setSelectedReturn] = useState<Return | null>(null)
-  const [parsedArticles, setParsedArticles] = useState<Article[]>([])
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [processorName, setProcessorName] = useState("")
@@ -135,20 +123,6 @@ export default function ReturnsTab() {
 
   const handleViewDetails = (returnItem: Return) => {
     setSelectedReturn(returnItem)
-
-    // Parse articles if available
-    if (returnItem.articles) {
-      try {
-        const articles = JSON.parse(returnItem.articles)
-        setParsedArticles(articles)
-      } catch (e) {
-        console.error("Fehler beim Parsen der Artikel:", e)
-        setParsedArticles([])
-      }
-    } else {
-      setParsedArticles([])
-    }
-
     setIsDetailsOpen(true)
   }
 
@@ -274,7 +248,22 @@ export default function ReturnsTab() {
       case "missing":
         return "Keine Verpackung"
       default:
-        return condition // Falls der Wert direkt verwendet wird
+        return "Unbekannt"
+    }
+  }
+
+  const getProductConditionText = (condition: string) => {
+    switch (condition) {
+      case "new":
+        return "Neu/Unbenutzt"
+      case "used":
+        return "Gebraucht"
+      case "damaged":
+        return "Beschädigt"
+      case "defective":
+        return "Defekt"
+      default:
+        return "Unbekannt"
     }
   }
 
@@ -353,7 +342,7 @@ export default function ReturnsTab() {
                     <TableHead className="w-[100px]">Datum</TableHead>
                     <TableHead>Kunde</TableHead>
                     <TableHead>Bestellnr.</TableHead>
-                    <TableHead>Artikel</TableHead>
+                    <TableHead>Produkt</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Aktionen</TableHead>
                   </TableRow>
@@ -394,7 +383,7 @@ export default function ReturnsTab() {
                                 handleViewDetails(returnItem)
                               }}
                             >
-                              <FileText className="h-4 w-4" />
+                              <Search className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="ghost"
@@ -426,17 +415,24 @@ export default function ReturnsTab() {
                                 </p>
                               </div>
                               <div>
-                                <h4 className="font-medium mb-2">Bearbeitungsinformationen</h4>
+                                <h4 className="font-medium mb-2">Produktinformationen</h4>
                                 <p className="text-sm mb-1">
-                                  <span className="font-medium">Status:</span> {getStatusBadge(returnItem.status)}
+                                  <span className="font-medium">Verpackung:</span>{" "}
+                                  {getPackageConditionText(returnItem.packageCondition)}
+                                </p>
+                                <p className="text-sm mb-1">
+                                  <span className="font-medium">Produktzustand:</span>{" "}
+                                  {getProductConditionText(returnItem.productCondition)}
                                 </p>
                                 <p className="text-sm mb-1">
                                   <span className="font-medium">Bearbeiter:</span>{" "}
                                   {returnItem.processorName || "Noch nicht zugewiesen"}
                                 </p>
-                                <p className="text-sm mb-1">
-                                  <span className="font-medium">Eingereicht am:</span>{" "}
-                                  {formatDate(returnItem.createdAt)}
+                              </div>
+                              <div className="md:col-span-2">
+                                <h4 className="font-medium mb-2">Grund für die Rückgabe</h4>
+                                <p className="text-sm bg-white p-2 rounded border">
+                                  {getReturnReasonText(returnItem.reason)}
                                 </p>
                               </div>
                             </div>
@@ -454,125 +450,90 @@ export default function ReturnsTab() {
 
       {/* Details Dialog */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Rückgabe Details</DialogTitle>
-            <DialogDescription>Vollständige Informationen zur Rückgabe #{selectedReturn?.id}</DialogDescription>
+            <DialogDescription>Vollständige Informationen zur Rückgabe</DialogDescription>
           </DialogHeader>
 
           {selectedReturn && (
-            <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="overview">Übersicht</TabsTrigger>
-                <TabsTrigger value="articles">Artikel ({parsedArticles.length})</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="overview" className="space-y-4 pt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-lg font-medium">Kundeninformationen</h3>
-                      <div className="mt-2 space-y-2">
-                        <p>
-                          <span className="font-medium">Name:</span> {selectedReturn.customerName}
-                        </p>
-                        <p>
-                          <span className="font-medium">Kundennummer:</span> {selectedReturn.customerNumber}
-                        </p>
-                        <p>
-                          <span className="font-medium">E-Mail:</span> {selectedReturn.contactEmail}
-                        </p>
-                        <p>
-                          <span className="font-medium">Telefon:</span> {selectedReturn.contactPhone}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="text-lg font-medium">Bestellinformationen</h3>
-                      <div className="mt-2 space-y-2">
-                        <p>
-                          <span className="font-medium">Bestellnummer:</span> {selectedReturn.orderNumber}
-                        </p>
-                        <p>
-                          <span className="font-medium">Eingereicht am:</span> {formatDate(selectedReturn.createdAt)}
-                        </p>
-                        <p>
-                          <span className="font-medium">Status:</span> {getStatusBadge(selectedReturn.status)}
-                        </p>
-                      </div>
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-medium">Kundeninformationen</h3>
+                  <div className="mt-2 space-y-2">
+                    <p>
+                      <span className="font-medium">Name:</span> {selectedReturn.customerName}
+                    </p>
+                    <p>
+                      <span className="font-medium">Kundennummer:</span> {selectedReturn.customerNumber}
+                    </p>
+                    <p>
+                      <span className="font-medium">E-Mail:</span> {selectedReturn.contactEmail}
+                    </p>
+                    <p>
+                      <span className="font-medium">Telefon:</span> {selectedReturn.contactPhone}
+                    </p>
                   </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-lg font-medium">Bearbeitung</h3>
-                      <div className="mt-2 space-y-2">
-                        <p>
-                          <span className="font-medium">Bearbeiter:</span>{" "}
-                          {selectedReturn.processorName || "Noch nicht zugewiesen"}
-                        </p>
-                        <p>
-                          <span className="font-medium">Rückgabe-ID:</span> {selectedReturn.id}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {selectedReturn.additionalInfo && (
-                    <div className="md:col-span-2">
-                      <h3 className="text-lg font-medium">Zusätzliche Informationen</h3>
-                      <div className="mt-2 p-3 bg-muted rounded-md">{selectedReturn.additionalInfo}</div>
-                    </div>
-                  )}
                 </div>
-              </TabsContent>
 
-              <TabsContent value="articles" className="space-y-4 pt-4">
-                {parsedArticles.length > 0 ? (
-                  <div className="space-y-4">
-                    {parsedArticles.map((article, index) => (
-                      <div key={index} className="p-4 border rounded-md">
-                        <h3 className="font-medium mb-2">Artikel {index + 1}</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-sm mb-1">
-                              <span className="font-medium">Artikelnummer:</span> {article.articleNumber}
-                            </p>
-                            <p className="text-sm mb-1">
-                              <span className="font-medium">Menge:</span> {article.quantity}
-                            </p>
-                            {article.deliveryNoteNumber && (
-                              <p className="text-sm mb-1">
-                                <span className="font-medium">Lieferscheinnummer:</span> {article.deliveryNoteNumber}
-                              </p>
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-sm mb-1">
-                              <span className="font-medium">Zustand:</span> {getPackageConditionText(article.condition)}
-                            </p>
-                            <p className="text-sm mb-1">
-                              <span className="font-medium">Grund für Rückgabe:</span>{" "}
-                              {getReturnReasonText(article.returnReason)}
-                            </p>
-                            {article.otherReason && (
-                              <p className="text-sm mb-1">
-                                <span className="font-medium">Sonstiger Grund:</span> {article.otherReason}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                <div>
+                  <h3 className="text-lg font-medium">Bestellinformationen</h3>
+                  <div className="mt-2 space-y-2">
+                    <p>
+                      <span className="font-medium">Bestellnummer:</span> {selectedReturn.orderNumber}
+                    </p>
+                    <p>
+                      <span className="font-medium">Produkt:</span> {selectedReturn.productName}
+                    </p>
+                    <p>
+                      <span className="font-medium">Eingereicht am:</span> {formatDate(selectedReturn.createdAt)}
+                    </p>
+                    <p>
+                      <span className="font-medium">Status:</span> {getStatusBadge(selectedReturn.status)}
+                    </p>
                   </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">Keine detaillierten Artikelinformationen verfügbar.</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-medium">Produktzustand</h3>
+                  <div className="mt-2 space-y-2">
+                    <p>
+                      <span className="font-medium">Verpackung:</span>{" "}
+                      {getPackageConditionText(selectedReturn.packageCondition)}
+                    </p>
+                    <p>
+                      <span className="font-medium">Produktzustand:</span>{" "}
+                      {getProductConditionText(selectedReturn.productCondition)}
+                    </p>
                   </div>
-                )}
-              </TabsContent>
-            </Tabs>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-medium">Bearbeitung</h3>
+                  <div className="mt-2 space-y-2">
+                    <p>
+                      <span className="font-medium">Bearbeiter:</span>{" "}
+                      {selectedReturn.processorName || "Noch nicht zugewiesen"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="md:col-span-2">
+                <h3 className="text-lg font-medium">Grund für die Rückgabe</h3>
+                <div className="mt-2 p-3 bg-muted rounded-md">{getReturnReasonText(selectedReturn.reason)}</div>
+              </div>
+
+              {selectedReturn.additionalInfo && (
+                <div className="md:col-span-2">
+                  <h3 className="text-lg font-medium">Zusätzliche Informationen</h3>
+                  <div className="mt-2 p-3 bg-muted rounded-md">{selectedReturn.additionalInfo}</div>
+                </div>
+              )}
+            </div>
           )}
 
           <DialogFooter>

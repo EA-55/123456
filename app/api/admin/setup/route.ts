@@ -1,6 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { cookies } from "next/headers"
-import { createServerClient } from "@/lib/db"
+import fs from "fs"
+import path from "path"
+
+// Pfad zur temporären Datei für Admin-Zugangsdaten
+const CREDENTIALS_FILE = path.join(process.cwd(), "admin-credentials.json")
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,45 +17,11 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Store credentials in Supabase
-    const supabase = createServerClient()
+    // Speichern der Zugangsdaten in einer temporären Datei
+    const credentials = { username, password }
+    fs.writeFileSync(CREDENTIALS_FILE, JSON.stringify(credentials, null, 2))
 
-    // Check if admin settings already exist
-    const { data: existingSettings, error: fetchError } = await supabase.from("admin_settings").select("*").single()
-
-    if (fetchError && fetchError.code !== "PGRST116") {
-      // PGRST116 is "no rows returned" which is expected
-      console.error("Error checking admin settings:", fetchError)
-      return NextResponse.json(
-        { success: false, error: "Fehler beim Überprüfen der Admin-Einstellungen" },
-        { status: 500 },
-      )
-    }
-
-    // Insert or update admin settings
-    const credentials = { username, password, updated_at: new Date().toISOString() }
-
-    let error
-    if (existingSettings) {
-      const { error: updateError } = await supabase
-        .from("admin_settings")
-        .update(credentials)
-        .eq("id", existingSettings.id)
-      error = updateError
-    } else {
-      const { error: insertError } = await supabase.from("admin_settings").insert({ ...credentials, id: 1 })
-      error = insertError
-    }
-
-    if (error) {
-      console.error("Error saving admin settings:", error)
-      return NextResponse.json(
-        { success: false, error: "Fehler beim Speichern der Admin-Einstellungen" },
-        { status: 500 },
-      )
-    }
-
-    // Set cookie to mark user as authenticated
+    // Cookie setzen, um den Benutzer als authentifiziert zu markieren
     cookies().set({
       name: "admin_auth",
       value: "authenticated",

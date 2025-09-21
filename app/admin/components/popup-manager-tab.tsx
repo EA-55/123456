@@ -44,7 +44,7 @@ const defaultConfig: PopupConfig = {
   textColor: "#000000",
 }
 
-export default function PopupManagerTab() {
+export function PopupManagerTab() {
   const [config, setConfig] = useState<PopupConfig>(defaultConfig)
   const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()

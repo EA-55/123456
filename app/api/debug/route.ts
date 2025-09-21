@@ -1,39 +1,28 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { createServerClient } from "@/lib/db"
+import { NextResponse } from "next/server"
+import fs from "fs"
+import path from "path"
 
-export async function GET(req: NextRequest) {
+const INQUIRIES_FILE = path.join(process.cwd(), "motor-inquiries.json")
+
+export async function GET() {
   try {
-    const supabase = createServerClient()
-
-    // Test Supabase connection
-    const { data, error } = await supabase.from("complaints").select("count").single()
-
-    if (error) {
-      return NextResponse.json(
-        {
-          supabaseConnection: false,
-          error: error.message,
-          details: error,
+    if (fs.existsSync(INQUIRIES_FILE)) {
+      const data = fs.readFileSync(INQUIRIES_FILE, "utf8")
+      const stats = fs.statSync(INQUIRIES_FILE)
+      return NextResponse.json({
+        fileExists: true,
+        fileContent: data,
+        fileStats: {
+          size: stats.size,
+          created: stats.birthtime,
+          modified: stats.mtime,
         },
-        { status: 500 },
-      )
+      })
+    } else {
+      return NextResponse.json({ fileExists: false, error: "File does not exist" }, { status: 404 })
     }
-
-    // Get environment variables (non-sensitive ones only)
-    const envVars = {
-      NODE_ENV: process.env.NODE_ENV,
-      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-      // Don't include sensitive keys
-    }
-
-    return NextResponse.json({
-      supabaseConnection: true,
-      environment: envVars,
-      timestamp: new Date().toISOString(),
-    })
   } catch (error) {
-    console.error("Debug API error:", error)
+    console.error("Error reading file:", error)
     return NextResponse.json({ error: "Internal server error", details: error.message }, { status: 500 })
   }
 }

@@ -1,81 +1,63 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { createServerClient } from "@/lib/db"
+import { NextResponse } from "next/server"
+import fs from "fs"
+import path from "path"
 import { v4 as uuidv4 } from "uuid"
 
-export async function POST(req: NextRequest) {
-  console.log("Received POST request for booking appointment")
-  try {
-    const { date, name, email } = await req.json()
-    console.log("Received data:", { date, name, email })
+const APPOINTMENTS_FILE = path.join(process.cwd(), "appointments.json")
 
-    const appointmentDate = new Date(date)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    if (appointmentDate < today || appointmentDate.getDay() === 0 || appointmentDate.getDay() === 6) {
-      console.log("Invalid date:", appointmentDate)
-      return NextResponse.json({ error: "Ungültiges Datum" }, { status: 400 })
-    }
-
-    const supabase = createServerClient()
-
-    // Check if date is already booked
-    const { data: existingAppointments, error: fetchError } = await supabase
-      .from("appointments")
-      .select("*")
-      .eq("date", date.split("T")[0])
-
-    if (fetchError) {
-      console.error("Error checking existing appointments:", fetchError)
-      return NextResponse.json({ error: "Fehler bei der Terminprüfung" }, { status: 500 })
-    }
-
-    if (existingAppointments && existingAppointments.length > 0) {
-      console.log("Date already booked:", date)
-      return NextResponse.json({ error: "Termin bereits gebucht" }, { status: 400 })
-    }
-
-    // Create new appointment
-    const newAppointment = {
-      id: uuidv4(),
-      date,
-      name,
-      email,
-      confirmed: false,
-      created_at: new Date().toISOString(),
-    }
-
-    const { error: insertError } = await supabase.from("appointments").insert(newAppointment)
-
-    if (insertError) {
-      console.error("Error creating appointment:", insertError)
-      return NextResponse.json({ error: "Fehler bei der Terminbuchung" }, { status: 500 })
-    }
-
-    console.log("New appointment booked:", newAppointment)
-    return NextResponse.json({ success: true, message: "Termin erfolgreich angefragt" })
-  } catch (error) {
-    console.error("Error processing appointment request:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+function readAppointments() {
+  if (!fs.existsSync(APPOINTMENTS_FILE)) {
+    console.log("Appointments file does not exist. Creating new file.")
+    fs.writeFileSync(APPOINTMENTS_FILE, "[]")
+    return []
   }
+  const data = fs.readFileSync(APPOINTMENTS_FILE, "utf8")
+  return JSON.parse(data)
 }
 
-export async function GET(req: NextRequest) {
-  console.log("Received GET request for appointments")
-  try {
-    const supabase = createServerClient()
+function writeAppointments(appointments: any[]) {
+  fs.writeFileSync(APPOINTMENTS_FILE, JSON.stringify(appointments, null, 2))
+  console.log("Appointments written to file.")
+}
 
-    const { data, error } = await supabase.from("appointments").select("date, confirmed")
+export async function POST(req: Request) {
+  console.log("Received POST request for booking appointment")
+  const { date, name, email } = await req.json()
+  console.log("Received data:", { date, name, email })
 
-    if (error) {
-      console.error("Error fetching appointments:", error)
-      return NextResponse.json({ error: "Fehler beim Abrufen der Termine" }, { status: 500 })
-    }
+  const appointmentDate = new Date(date)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
 
-    console.log("Returning appointments:", data)
-    return NextResponse.json(data)
-  } catch (error) {
-    console.error("Error processing get appointments request:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  if (appointmentDate < today || appointmentDate.getDay() === 0 || appointmentDate.getDay() === 6) {
+    console.log("Invalid date:", appointmentDate)
+    return NextResponse.json({ error: "Ungültiges Datum" }, { status: 400 })
   }
+
+  const appointments = readAppointments()
+  const isBooked = appointments.some((a) => a.date.split("T")[0] === date.split("T")[0])
+  if (isBooked) {
+    console.log("Date already booked:", date)
+    return NextResponse.json({ error: "Termin bereits gebucht" }, { status: 400 })
+  }
+
+  const newAppointment = {
+    id: uuidv4(),
+    date,
+    name,
+    email,
+    confirmed: false,
+  }
+  appointments.push(newAppointment)
+  writeAppointments(appointments)
+
+  console.log("New appointment booked:", newAppointment)
+  return NextResponse.json({ success: true, message: "Termin erfolgreich angefragt" })
+}
+
+export async function GET() {
+  console.log("Received GET request for appointments")
+  const appointments = readAppointments()
+  console.log("Returning appointments:", appointments)
+  return NextResponse.json(appointments.map((a) => ({ date: a.date, confirmed: a.confirmed })))
 }

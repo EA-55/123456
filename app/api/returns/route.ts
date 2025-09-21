@@ -1,66 +1,44 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createServerClient } from "@/lib/db"
-import { v4 as uuidv4 } from "uuid"
+import db from "@/lib/db"
 
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
 
-    // Validierung der Eingabedaten
-    if (!data.customerNumber || !data.customerName || !data.articles || data.articles.length === 0) {
-      return NextResponse.json({ error: "Alle Pflichtfelder müssen ausgefüllt sein" }, { status: 400 })
+    // Validiere die erforderlichen Felder
+    if (!data.customerNumber || !data.customerName || !data.orderNumber || !data.productName) {
+      return NextResponse.json({ error: "Alle erforderlichen Felder müssen ausgefüllt sein" }, { status: 400 })
     }
 
-    const supabase = createServerClient()
+    // Erstelle eine neue Rückgabe
+    const newReturn = db.createRetour({
+      userId: "guest", // Kann später durch die tatsächliche Benutzer-ID ersetzt werden
+      orderNumber: data.orderNumber,
+      productName: data.productName,
+      reason: data.reason,
+      status: "pending", // Standardstatus für neue Rückgaben
+      customerNumber: data.customerNumber,
+      customerName: data.customerName,
+      packageCondition: data.packageCondition,
+      productCondition: data.productCondition,
+      contactEmail: data.contactEmail,
+      contactPhone: data.contactPhone,
+      additionalInfo: data.additionalInfo,
+    })
 
-    // Erstellen einer neuen Rückgabe
-    const newReturn = {
-      id: uuidv4(),
-      user_id: "guest", // Für nicht angemeldete Benutzer
-      order_number: data.orderNumber || "Keine Bestellnummer", // Standardwert
-      product_name: data.articles.map((article: any) => `${article.articleNumber} (${article.quantity}x)`).join(", "),
-      reason: data.articles.map((article: any) => `${article.articleNumber}: ${article.returnReason}`).join("; "),
-      status: "pending",
-      customer_number: data.customerNumber,
-      customer_name: data.customerName,
-      package_condition: data.articles[0].condition, // Vereinfachung: Wir nehmen den Zustand des ersten Artikels
-      product_condition: "Siehe Details",
-      contact_email: data.email,
-      contact_phone: data.phone || "Nicht angegeben", // Standardwert
-      additional_info: data.comments || "",
-      processor_name: "", // Wird später vom Admin ausgefüllt
-      articles: JSON.stringify(data.articles), // Speichern der vollständigen Artikeldaten
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }
-
-    const { error } = await supabase.from("returns").insert(newReturn)
-
-    if (error) {
-      console.error("Fehler beim Speichern der Rückgabe:", error)
-      return NextResponse.json({ error: "Ein Fehler ist bei der Verarbeitung aufgetreten" }, { status: 500 })
-    }
-
-    return NextResponse.json({ success: true, return: newReturn, id: newReturn.id })
+    return NextResponse.json({ success: true, return: newReturn }, { status: 201 })
   } catch (error) {
-    console.error("Fehler bei der Verarbeitung der Rückgabe:", error)
-    return NextResponse.json({ error: "Ein Fehler ist bei der Verarbeitung aufgetreten" }, { status: 500 })
+    console.error("Fehler beim Erstellen der Rückgabe:", error)
+    return NextResponse.json({ error: "Interner Serverfehler" }, { status: 500 })
   }
 }
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
-    const supabase = createServerClient()
-    const { data, error } = await supabase.from("returns").select("*")
-
-    if (error) {
-      console.error("Fehler beim Abrufen der Rückgaben:", error)
-      return NextResponse.json({ error: "Ein Fehler ist beim Abrufen der Rückgaben aufgetreten" }, { status: 500 })
-    }
-
-    return NextResponse.json({ returns: data })
+    const returns = db.getAllRetouren()
+    return NextResponse.json({ returns }, { status: 200 })
   } catch (error) {
     console.error("Fehler beim Abrufen der Rückgaben:", error)
-    return NextResponse.json({ error: "Ein Fehler ist beim Abrufen der Rückgaben aufgetreten" }, { status: 500 })
+    return NextResponse.json({ error: "Interner Serverfehler" }, { status: 500 })
   }
 }

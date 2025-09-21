@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils"
 import { Icons } from "@/components/icons"
 import { MainNav } from "@/components/main-nav"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { Button } from "@/components/ui/button"
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -41,15 +42,17 @@ export function SiteHeader({ className, ...props }: SiteHeaderProps) {
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
-
-            <NavigationMenuItem>
-              <Link href="/rueckgabe" legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>Rückgabe</NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-4">
+          <Link href="/rueckgabe">
+            <Button variant="default" className="hidden sm:flex">
+              Rückgabe anmelden
+            </Button>
+            <Button variant="default" size="sm" className="sm:hidden">
+              Rückgabe
+            </Button>
+          </Link>
           <ThemeToggle />
         </div>
       </div>

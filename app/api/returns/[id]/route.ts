@@ -1,47 +1,36 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createServerClient } from "@/lib/db"
+import db from "@/lib/db"
 
-export async function GET(request: NextRequest, context: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const id = context.params.id
-    const supabase = createServerClient()
+    const id = params.id
+    const returnItem = db.getRetourById(id)
 
-    // Fetch the return
-    const { data, error } = await supabase.from("returns").select("*").eq("id", id).single()
-
-    if (error) {
-      console.error("Error fetching return:", error)
-      return NextResponse.json({ error: "Failed to fetch return" }, { status: 500 })
+    if (!returnItem) {
+      return NextResponse.json({ error: "Rückgabe nicht gefunden" }, { status: 404 })
     }
 
-    if (!data) {
-      return NextResponse.json({ error: "Return not found" }, { status: 404 })
-    }
-
-    return NextResponse.json(data)
+    return NextResponse.json({ return: returnItem }, { status: 200 })
   } catch (error) {
-    console.error("Error fetching return:", error)
-    return NextResponse.json({ error: "Failed to fetch return data" }, { status: 500 })
+    console.error("Fehler beim Abrufen der Rückgabe:", error)
+    return NextResponse.json({ error: "Interner Serverfehler" }, { status: 500 })
   }
 }
 
-export async function PUT(request: NextRequest, context: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const id = context.params.id
-    const supabase = createServerClient()
-    const body = await request.json()
+    const id = params.id
+    const data = await request.json()
 
-    // Update the return
-    const { data, error } = await supabase.from("returns").update(body).eq("id", id).select().single()
+    const updatedReturn = db.updateRetour(id, data)
 
-    if (error) {
-      console.error("Error updating return:", error)
-      return NextResponse.json({ error: "Failed to update return" }, { status: 500 })
+    if (!updatedReturn) {
+      return NextResponse.json({ error: "Rückgabe nicht gefunden" }, { status: 404 })
     }
 
-    return NextResponse.json(data)
+    return NextResponse.json({ return: updatedReturn }, { status: 200 })
   } catch (error) {
-    console.error("Error updating return:", error)
-    return NextResponse.json({ error: "Failed to update return" }, { status: 500 })
+    console.error("Fehler beim Aktualisieren der Rückgabe:", error)
+    return NextResponse.json({ error: "Interner Serverfehler" }, { status: 500 })
   }
 }
