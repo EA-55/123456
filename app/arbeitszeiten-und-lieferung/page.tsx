@@ -175,7 +175,7 @@ export default function ArbeitszeienUndLieferung() {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <Link href="/" passHref>
-            <Button variant="outline" className="mb-6">
+            <Button variant="outline" className="mb-6 bg-transparent">
               <ArrowLeft className="mr-2 h-4 w-4" /> Zurück zur Hauptseite
             </Button>
           </Link>
@@ -280,7 +280,7 @@ export default function ArbeitszeienUndLieferung() {
                       { order: "Dienstag 18:00 Uhr", delivery: "Mittwoch ab 07:00 Uhr" },
                       { order: "Mittwoch 18:00 Uhr", delivery: "Donnerstag ab 07:00 Uhr" },
                       { order: "Donnerstag 18:00 Uhr", delivery: "Freitag ab 07:00 Uhr" },
-                      { order: "Freitag 18:00 Uhr", delivery: "Montag ab 07:00 Uhr" },
+                      { order: "Freitag 18:00 Uhr", delivery: "Samstag ab 08:00 Uhr" },
                       { order: "Samstag 13:30 Uhr", delivery: "Montag ab 07:00 Uhr" },
                     ].map((item, index) => (
                       <motion.tr

@@ -30,7 +30,7 @@ export default function ImpressumPage() {
           <p>
             Telefon: 01705345350
             <br />
-            E-Mail: info@ersatzteilpartner.de
+            E-Mail: info@ersatzteilpartner24.de
           </p>
 
           <h2>Umsatzsteuer-Identifikationsnummer gemäß §27 a Umsatzsteuergesetz:</h2>

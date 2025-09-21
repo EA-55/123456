@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { cookies } from "next/headers"
-import { authenticate } from "@/app/admin/auth"
+import { authenticate } from "@/lib/server-auth"
 
 export async function POST(req: NextRequest) {
   try {

@@ -1,14 +1,8 @@
-import type { NextRequest } from "next/server"
 import fs from "fs"
 import path from "path"
 
 // Pfad zur temporären Datei für Admin-Zugangsdaten
 const CREDENTIALS_FILE = path.join(process.cwd(), "admin-credentials.json")
-
-export function isAuthenticated(req: NextRequest) {
-  const authCookie = req.cookies.get("admin_auth")?.value
-  return authCookie === "authenticated"
-}
 
 export async function authenticate(username: string, password: string) {
   try {
