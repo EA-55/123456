@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { isAuthenticated } from "@/app/admin/auth"
+import { isAuthenticated } from "@/lib/auth"
 
 export function GET(req: NextRequest) {
   console.log("Auth-Check API aufgerufen")

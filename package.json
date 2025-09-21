@@ -1,7 +1,19 @@
 {
+  "name": "ersatzteilpartner24",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "lint": "next lint",
+    "start": "next start",
+    "vercel-build": "next build"
+  },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
     "@hookform/resolvers": "latest",
+    "@radix-ui/react-dialog": "^1.0.5",
+    "@radix-ui/react-slot": "^1.0.2",
     "@tailwindcss/typography": "latest",
     "@types/node": "latest",
     "@types/react": "latest",
@@ -19,15 +31,21 @@
     "react-hook-form": "latest",
     "react-intersection-observer": "latest",
     "tailwind-merge": "^2.5.5",
-    "tailwindcss": "^3.3.0",
+    "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "latest",
-    "uuid": "latest"
+    "uuid": "latest",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "^22",
+    "@types/nodemailer": "^6.4.8",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/uuid": "^9.0.0",
+    "autoprefixer": "^10.4.15",
+    "eslint": "^8.48.0",
+    "eslint-config-next": "latest",
     "postcss": "^8.5",
     "typescript": "^5"
   }
