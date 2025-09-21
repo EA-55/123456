@@ -19,8 +19,6 @@ const nextConfig = {
   compress: true,
   // Optimiere für Produktionsumgebung
   reactStrictMode: true,
-  // Optimiere für statische Seiten
-  output: "standalone",
 }
 
 module.exports = nextConfig
